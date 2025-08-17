@@ -19,6 +19,7 @@ st.session_state.setdefault("page_num", 1)
 st.session_state.setdefault("filters", {})         # 프리셋 저장용
 st.session_state.setdefault("recent", [])          # 최근 본 음료 (id 리스트)
 st.session_state.setdefault("favorites", set())    # 즐겨찾기 (id 집합)
+st.session_state.setdefault("_prev_q", "")         # 검색어 변경 감지
 
 # 고정: 페이지당 카드 수
 PAGE_SIZE = 12
@@ -96,7 +97,23 @@ def render_cover():
 # =========================
 def render_main():
     df = pd.read_csv(CSV_PATH)
-    st.title("🥤 스마트컵 - 건강한 음료 선택 도우미")
+
+    # 상단 타이틀 + 오른쪽 정렬 검색창
+    left, right = st.columns([5, 2])
+    with left:
+        st.title("🥤 스마트컵 - 건강한 음료 선택 도우미")
+    with right:
+        q = st.text_input(
+            " ",  # 라벨 숨김용
+            key="search_q",
+            placeholder="🔎 음료명/카페/카테고리 검색",
+            label_visibility="collapsed",
+            help="예) 라떼, 투썸, 프라푸치노"
+        )
+        # 검색어 변경 시 1페이지로 이동
+        if st.session_state._prev_q != q:
+            st.session_state.page_num = 1
+            st.session_state._prev_q = q
 
     # -------- 사이드바: 프리셋/필터 --------
     st.sidebar.header("🧭 추천/가이드 모드")
@@ -154,6 +171,17 @@ def render_main():
 
     # -------- 필터링 --------
     filtered = df.copy()
+
+    # (A) 검색어 필터: 음료명/카페/카테고리에 부분일치
+    if q:
+        mask_q = (
+            filtered["Name"].str.contains(q, case=False, na=False) |
+            filtered["Cafe"].str.contains(q, case=False, na=False) |
+            filtered["Category"].str.contains(q, case=False, na=False)
+        )
+        filtered = filtered[mask_q]
+
+    # (B) 일반 필터
     if selected_cafes:
         filtered = filtered[filtered["Cafe"].isin(selected_cafes)]
     if selected_category:
@@ -378,5 +406,6 @@ if st.session_state.page == "cover":
     render_cover()
 else:
     render_main()
+
 
 
