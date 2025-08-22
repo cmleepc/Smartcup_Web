@@ -70,27 +70,52 @@ def toggle_fav(item_id: str):
 # =========================
 # 표지 페이지
 # =========================
+# =========================
+# 표지 페이지
+# =========================
 def render_cover():
-    # 컵/타이틀을 살짝 오른쪽으로 이동(전체 레이아웃 유지)
     st.markdown(
         """
         <style>
-        .cover-shift { transform: translateX(24px); } /* 약간만 오른쪽으로 */
-        .cover-emoji { font-size: 64px; line-height: 1; }
+        .cover-container {
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center;
+        }
+        .cover-emoji { font-size: 64px; line-height: 1; margin-bottom: 16px; }
+        .cover-title { font-size: 40px; font-weight: 800; margin-bottom: 8px; }
+        .cover-sub { font-size: 18px; color: #374151; margin-bottom: 12px; }
+        .cover-desc { font-size: 15px; color: #4b5563; line-height: 1.4; }
+        @media (max-width: 600px) {
+            .cover-title { font-size: 32px; }
+            .cover-sub { font-size: 16px; }
+            .cover-desc { font-size: 14px; }
+        }
         </style>
         """,
         unsafe_allow_html=True
     )
-    st.markdown("<div style='height:8vh'></div>", unsafe_allow_html=True)
-    c1, c2, c3 = st.columns([1,1,1])
-    with c2:
-        st.markdown('<div class="cover-emoji cover-shift">🥤</div>', unsafe_allow_html=True)
-        st.markdown('<h2 class="cover-shift">스마트컵</h2>', unsafe_allow_html=True)
-        st.markdown('<h4 class="cover-shift">건강한 음료 선택을 도와드립니다.</h4>', unsafe_allow_html=True)
-        st.markdown('<div class="cover-shift">카페별 영양성분을 비교하고, 목표에 맞는 음료를 빠르게 찾아보세요.</div>', unsafe_allow_html=True)
-        st.markdown("---")
-        if st.button("🚀 시작하기", use_container_width=True):
-            st.session_state.page = "main"
+
+    st.markdown("<div style='height:10vh'></div>", unsafe_allow_html=True)
+
+    st.markdown(
+        """
+        <div class="cover-container">
+            <div class="cover-emoji">🥤</div>
+            <div class="cover-title">SMART CUP</div>
+            <div class="cover-sub">당신의 건강을 위한 똑똑한 음료 선택 도우미</div>
+            <div class="cover-desc">
+                카페별 영양성분을 비교하고,<br/>
+                목표에 맞는 음료를 빠르게 찾아보세요.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+    st.markdown("---")
+    if st.button("🚀 시작하기", use_container_width=True):
+        st.session_state.page = "main"
+
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
