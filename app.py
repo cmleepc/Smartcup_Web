@@ -71,29 +71,19 @@ def toggle_fav(item_id: str):
 # 표지 페이지
 # =========================
 def render_cover():
+    # 표지 스타일 (가운데 정렬 + 반응형 폰트)
     st.markdown(
         """
         <style>
-        .cover-container {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            text-align: center;
-        }
-        .cover-emoji { font-size: 64px; line-height: 1; margin-bottom: 16px; }
-        .cover-title { font-size: 40px; font-weight: 800; margin-bottom: 8px; }
-        .cover-sub { font-size: 18px; color: #374151; margin-bottom: 12px; }
-        .cover-desc { font-size: 15px; color: #4b5563; line-height: 1.4; margin-bottom: 24px; }
-        .small-btn {
-            display: flex; justify-content: center; margin-top: 10px;
-        }
-        .small-btn button {
-            width: 200px !important;
-            font-size: 16px !important;
-        }
+        .cover-wrap { text-align:center; display:flex; flex-direction:column; align-items:center; }
+        .cover-emoji { font-size:64px; line-height:1; margin-bottom:16px; }
+        .cover-title { font-size:40px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px; }
+        .cover-sub   { font-size:18px; color:#374151; margin-bottom:12px; }
+        .cover-desc  { font-size:15px; color:#4b5563; line-height:1.5; margin-bottom:10px; }
         @media (max-width: 600px) {
-            .cover-title { font-size: 32px; }
-            .cover-sub { font-size: 16px; }
-            .cover-desc { font-size: 14px; }
-            .small-btn button { width: 160px !important; font-size: 14px !important; }
+            .cover-title { font-size:32px; }
+            .cover-sub   { font-size:16px; }
+            .cover-desc  { font-size:14px; }
         }
         </style>
         """,
@@ -104,25 +94,27 @@ def render_cover():
 
     st.markdown(
         """
-        <div class="cover-container">
-            <div class="cover-emoji">🥤</div>
-            <div class="cover-title">SMART CUP</div>
-            <div class="cover-sub">당신의 건강을 위한 똑똑한 음료 선택 도우미</div>
-            <div class="cover-desc">
-                카페별 영양성분을 비교하고,<br/>
-                목표에 맞는 음료를 빠르게 찾아보세요.
-            </div>
+        <div class="cover-wrap">
+          <div class="cover-emoji">🥤</div>
+          <div class="cover-title">SMART CUP</div>
+          <div class="cover-sub">당신의 건강을 위한 똑똑한 음료 선택 도우미</div>
+          <div class="cover-desc">
+            카페별 영양성분을 비교하고,<br/>
+            목표에 맞는 음료를 빠르게 찾아보세요.
+          </div>
         </div>
         """,
         unsafe_allow_html=True
     )
 
-    # 버튼을 가운데 정렬 div 안에 배치
-    st.markdown('<div class="small-btn">', unsafe_allow_html=True)
-    if st.button("🚀 시작하기", key="start_btn"):
-        st.session_state.page = "main"
-    st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("---")
 
+    # 버튼을 중앙에 정확히 배치 (3열 레이아웃에서 가운데 칸 사용)
+    left_sp, center_col, right_sp = st.columns([3, 1, 3])
+    with center_col:
+        # 버튼 크기 과도 확대 방지: use_container_width=False 유지
+        if st.button("🚀 시작하기", key="start_btn"):
+            st.session_state.page = "main"
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
@@ -438,6 +430,7 @@ if st.session_state.page == "cover":
     render_cover()
 else:
     render_main()
+
 
 
 
