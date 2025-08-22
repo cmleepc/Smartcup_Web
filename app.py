@@ -82,9 +82,12 @@ def render_cover():
         .cover-title { font-size: 40px; font-weight: 800; margin-bottom: 8px; }
         .cover-sub { font-size: 18px; color: #374151; margin-bottom: 12px; }
         .cover-desc { font-size: 15px; color: #4b5563; line-height: 1.4; margin-bottom: 24px; }
+        .small-btn {
+            display: flex; justify-content: center; margin-top: 10px;
+        }
         .small-btn button {
-            width: 200px !important;    /* 버튼 너비 고정 */
-            font-size: 16px !important; /* 글자 크기 조절 */
+            width: 200px !important;
+            font-size: 16px !important;
         }
         @media (max-width: 600px) {
             .cover-title { font-size: 32px; }
@@ -114,12 +117,11 @@ def render_cover():
         unsafe_allow_html=True
     )
 
-    # 버튼을 div로 감싸 크기 줄이기
-    with st.container():
-        st.markdown('<div class="small-btn">', unsafe_allow_html=True)
-        if st.button("🚀 시작하기", key="start_btn"):  # use_container_width 제거
-            st.session_state.page = "main"
-        st.markdown('</div>', unsafe_allow_html=True)
+    # 버튼을 가운데 정렬 div 안에 배치
+    st.markdown('<div class="small-btn">', unsafe_allow_html=True)
+    if st.button("🚀 시작하기", key="start_btn"):
+        st.session_state.page = "main"
+    st.markdown('</div>', unsafe_allow_html=True)
 
 
 # =========================
