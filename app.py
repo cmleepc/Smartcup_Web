@@ -373,7 +373,7 @@ def render_main():
 
         with col1:
             if img_path:
-                st.image(str(img_path), caption=row["Name"], use_column_width=True)
+                st.image(str(img_path), caption=row["Name"], use_container_width=True)
             else:
                 st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg 저장)")
 
