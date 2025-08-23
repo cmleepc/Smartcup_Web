@@ -1,6 +1,7 @@
 # app.py
 import streamlit as st
 import pandas as pd
+import unicodedata
 from pathlib import Path
 
 # =========================
@@ -35,44 +36,66 @@ def safe_filename(text: str) -> str:
 # 교체하세요
 def find_image_path(cafe: str, name: str, temp: str = ""):
     """
-    images/ 에서 아래 우선순위로 파일 탐색 (확장자 대/소문자 허용)
-    1) Cafe_Name
-    2) Cafe_Temp Name
-    - 각 패턴마다 공백/언더스코어 두 버전 모두 시도
+    images/ 폴더에서 실제 파일들을 순회하며 느슨하게 매칭:
+    - 후보: 1) Cafe_Name, 2) Cafe_Temp Name
+    - 비교 시 공백/밑줄/하이픈 제거, 소문자화, 유니코드 NFC 정규화
+    - 확장자 대/소문자 허용 (.jpg/.jpeg/.png)
     """
-    # 확장자 후보 (대/소문자 모두)
-    exts = [".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"]
+    def norm(s: str) -> str:
+        s = unicodedata.normalize("NFC", s or "")
+        s = s.lower().strip()
+        # 공백/밑줄/하이픈 제거하여 비교
+        return s.replace(" ", "").replace("_", "").replace("-", "")
 
-    def try_paths(bases):
-        for base in bases:
-            for ext in exts:
-                p = IMG_DIR / f"{base}{ext}"
-                if p.exists():
-                    return p
+    cafe_raw = str(cafe or "").strip()
+    name_raw = str(name or "").strip()
+    temp_raw = str(temp or "").strip()
+
+    # 후보 키(원문 기준)
+    candidate_stems = [f"{cafe_raw}_{name_raw}"]
+    if temp_raw:
+        candidate_stems.append(f"{cafe_raw}_{temp_raw} {name_raw}")
+
+    # 정규화된 후보 키
+    cand_keys = [norm(stem) for stem in candidate_stems]
+
+    # 허용 확장자
+    allow_ext = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
+
+    if not IMG_DIR.exists():
         return None
 
-    # 원문(공백 유지) / 안전형(언더스코어) 모두 준비
-    cafe_raw, name_raw, temp_raw = str(cafe).strip(), str(name).strip(), str(temp or "").strip()
-    cafe_s  = safe_filename(cafe_raw)
-    name_s  = safe_filename(name_raw)
-    temp_s  = safe_filename(temp_raw) if temp_raw else ""
+    # 디렉터리 내 파일들을 순회하며 느슨 매칭
+    for p in IMG_DIR.iterdir():
+        if not p.is_file():
+            continue
+        if p.suffix not in allow_ext:
+            continue
+        stem_key = norm(p.stem)
+        if any(stem_key == ck for ck in cand_keys):
+            return p
 
-    bases = []
+    # 못 찾았으면 safe_filename 버전(언더스코어 치환)도 시도
+    cafe_s = safe_filename(cafe_raw)
+    name_s = safe_filename(name_raw)
+    temp_s = safe_filename(temp_raw) if temp_raw else ""
 
-    # --- 1) Cafe_Name ---
-    bases += [
-        f"{cafe_raw}_{name_raw}",   # 공백 버전
-        f"{cafe_s}_{name_s}",       # 언더스코어 버전
-    ]
+    candidate_stems2 = [f"{cafe_s}_{name_s}"]
+    if temp_s:
+        candidate_stems2.append(f"{cafe_s}_{temp_s}_{name_s}")
 
-    # --- 2) Cafe_Temp Name ---
-    if temp_raw:
-        # 공백 버전 (예: 스타벅스_HOT 카페 라떼)
-        bases.append(f"{cafe_raw}_{temp_raw} {name_raw}")
-        # 언더스코어 버전 (예: 스타벅스_HOT_카페_라떼)
-        bases.append(f"{cafe_s}_{temp_s}_{name_s}")
+    cand_keys2 = [norm(stem) for stem in candidate_stems2]
 
-    return try_paths(bases)
+    for p in IMG_DIR.iterdir():
+        if not p.is_file():
+            continue
+        if p.suffix not in allow_ext:
+            continue
+        stem_key = norm(p.stem)
+        if any(stem_key == ck for ck in cand_keys2):
+            return p
+
+    return None
 
 
 def format_title(cafe: str, temp: str, name: str) -> str:
