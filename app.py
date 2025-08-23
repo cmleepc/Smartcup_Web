@@ -1,8 +1,8 @@
 # app.py
 import streamlit as st
 import pandas as pd
-import unicodedata
 from pathlib import Path
+import unicodedata
 
 # =========================
 # 기본 설정/경로
@@ -32,8 +32,6 @@ HAS_DIALOG = hasattr(st, "dialog")
 def safe_filename(text: str) -> str:
     return str(text).replace(" ", "_").replace("/", "-").replace("\\", "-").strip()
 
-# --- 교체된 이미지 탐색 함수 ---
-# 교체하세요
 def find_image_path(cafe: str, name: str, temp: str = ""):
     """
     images/ 폴더에서 실제 파일들을 순회하며 느슨하게 매칭:
@@ -44,59 +42,41 @@ def find_image_path(cafe: str, name: str, temp: str = ""):
     def norm(s: str) -> str:
         s = unicodedata.normalize("NFC", s or "")
         s = s.lower().strip()
-        # 공백/밑줄/하이픈 제거하여 비교
         return s.replace(" ", "").replace("_", "").replace("-", "")
 
     cafe_raw = str(cafe or "").strip()
     name_raw = str(name or "").strip()
     temp_raw = str(temp or "").strip()
 
-    # 후보 키(원문 기준)
+    # 1차 후보 키(원문 기준)
     candidate_stems = [f"{cafe_raw}_{name_raw}"]
     if temp_raw:
         candidate_stems.append(f"{cafe_raw}_{temp_raw} {name_raw}")
-
-    # 정규화된 후보 키
     cand_keys = [norm(stem) for stem in candidate_stems]
 
-    # 허용 확장자
     allow_ext = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
+    if IMG_DIR.exists():
+        for p in IMG_DIR.iterdir():
+            if p.is_file() and p.suffix in allow_ext:
+                if norm(p.stem) in cand_keys:
+                    return p
 
-    if not IMG_DIR.exists():
-        return None
-
-    # 디렉터리 내 파일들을 순회하며 느슨 매칭
-    for p in IMG_DIR.iterdir():
-        if not p.is_file():
-            continue
-        if p.suffix not in allow_ext:
-            continue
-        stem_key = norm(p.stem)
-        if any(stem_key == ck for ck in cand_keys):
-            return p
-
-    # 못 찾았으면 safe_filename 버전(언더스코어 치환)도 시도
+    # 2차 후보(safe_filename 적용)
     cafe_s = safe_filename(cafe_raw)
     name_s = safe_filename(name_raw)
     temp_s = safe_filename(temp_raw) if temp_raw else ""
-
     candidate_stems2 = [f"{cafe_s}_{name_s}"]
     if temp_s:
         candidate_stems2.append(f"{cafe_s}_{temp_s}_{name_s}")
-
     cand_keys2 = [norm(stem) for stem in candidate_stems2]
 
-    for p in IMG_DIR.iterdir():
-        if not p.is_file():
-            continue
-        if p.suffix not in allow_ext:
-            continue
-        stem_key = norm(p.stem)
-        if any(stem_key == ck for ck in cand_keys2):
-            return p
+    if IMG_DIR.exists():
+        for p in IMG_DIR.iterdir():
+            if p.is_file() and p.suffix in allow_ext:
+                if norm(p.stem) in cand_keys2:
+                    return p
 
     return None
-
 
 def format_title(cafe: str, temp: str, name: str) -> str:
     nm = str(name).strip()
@@ -177,7 +157,7 @@ def render_main():
     # 상단 캡션
     st.caption("왼쪽 사이드바의 필터를 눌러 자유롭게 필터링해보세요.")
 
-    # ===== 상단 타이틀/검색 + 전역 스타일 =====
+    # ===== 전역 스타일 =====
     st.markdown(
         """
         <style>
@@ -185,7 +165,7 @@ def render_main():
         .title-row  { display:flex; align-items:center; gap:10px; }
         .title-emoji{ font-size:28px; line-height:1; }
         .title-main { font-size:32px; font-weight:900; letter-spacing:0.3px; }
-        .spacer-vertical{ height:18px; }  /* '결과' 위쪽 여백 */
+        .spacer-vertical{ height:18px; }
 
         .section-title { font-size:16px; font-weight:700; margin:0; } /* 결과 헤딩 작게 */
 
@@ -195,16 +175,28 @@ def render_main():
         .meta { color:#6b7280; font-size:13px; }
         .price { font-weight:800; font-size:18px; }
         .tiny-star button { padding:4px 8px !important; min-width:auto !important; border:1px solid #e5e7eb !important; }
+
+        /* 상세 모달용 */
+        .detail-grid {display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+        .detail-badge {background:#f3f4f6; border:1px solid #eee; border-radius:12px; padding:10px 12px; font-size:14px; font-weight:700; text-align:center;}
+        .detail-meta { color:#6b7280; font-size:14px; margin-top:6px; }
+        .detail-kv   { display:flex; gap:12px; margin-top:8px; flex-wrap:wrap; }
+        .detail-box  { background:#f9fafb; border:1px solid #eee; border-radius:12px; padding:10px 12px; min-width:140px; }
+        .detail-lab  { font-size:12px; color:#6b7280; margin-bottom:2px; }
+        .detail-val  { font-size:18px; font-weight:800; line-height:1.2; }
+
         @media (max-width: 600px) {
           .title-emoji{ font-size:24px; }
           .title-main { font-size:28px; }
           .section-title { font-size:14px; }
+          .detail-grid { grid-template-columns: 1fr; }
         }
         </style>
         """,
         unsafe_allow_html=True
     )
 
+    # 헤더 + 검색
     left, right = st.columns([5, 2])
     with left:
         st.markdown(
@@ -364,36 +356,51 @@ def render_main():
         st.session_state.detail_row = None
 
     def detail_body(row: pd.Series):
+        # 최근 본 음료 기록
         item_id = make_item_id(row)
         mark_as_viewed(item_id)
 
-        # --- 온도까지 포함해 이미지 찾기 ---
-        img_path = find_image_path(row["Cafe"], row["Name"], row.get("Temperature", ""))
+        img_path = find_image_path(row["Cafe"], row["Name"], row.get("Temperature",""))
 
-        col1, col2 = st.columns([1,1])
-
-        with col1:
+        # 1) 상단: 이미지(좌) / 영양 뱃지(우)
+        img_col, facts_col = st.columns([1.05, 1])
+        with img_col:
             if img_path:
-                st.image(str(img_path), caption=row["Name"], use_container_width=True)
+                st.image(str(img_path), caption=f"{row['Temperature']} {row['Name']}".strip(), use_container_width=True)
             else:
-                st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg 저장)")
+                st.info("이미지가 없습니다. (images/{카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg)")
+        with facts_col:
+            st.markdown(
+                f"""
+                <div class="detail-grid">
+                  <div class="detail-badge">칼로리 {int(row['Calories (kcal)'])}kcal</div>
+                  <div class="detail-badge">카페인 {int(row['Caffeine (mg)'])}mg</div>
+                  <div class="detail-badge">당 {int(row['Sugar (g)'])}g</div>
+                  <div class="detail-badge">지방 {int(row['Fat (g)'])}g</div>
+                  <div class="detail-badge">나트륨 {int(row['Sodium (mg)'])}mg</div>
+                </div>
+                """,
+                unsafe_allow_html=True
+            )
 
-            st.markdown(f"**카페:** {row['Cafe']}")
-            st.markdown(f"<span class='meta'>카테고리: {row['Category']}</span> &nbsp; <span class='meta'>온도: {row['Temperature']}</span>", unsafe_allow_html=True)
+        # 2) 메타 정보
+        st.markdown(f"**카페:** {row['Cafe']}")
+        st.markdown(
+            f"<div class='detail-meta'>카테고리: {row['Category']} &nbsp;&nbsp;·&nbsp;&nbsp; 온도: {row['Temperature']}</div>",
+            unsafe_allow_html=True
+        )
 
-            st.markdown("<div class='k-badges'>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>용량 {int(row['Volume (ml)'])}ml</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>가격 {int(row['Price (KRW)']):,}원</span>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
-
-        with col2:
-            st.markdown("<div class='k-badges'>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>당 {int(row['Sugar (g)'])}g</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>지방 {int(row['Fat (g)'])}g</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>나트륨 {int(row['Sodium (mg)'])}mg</span>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+        # 3) 하단: 용량/가격
+        st.markdown("<div class='detail-kv'>", unsafe_allow_html=True)
+        st.markdown(
+            f"<div class='detail-box'><div class='detail-lab'>용량</div><div class='detail-val'>{int(row['Volume (ml)'])} ml</div></div>",
+            unsafe_allow_html=True
+        )
+        st.markdown(
+            f"<div class='detail-box'><div class='detail-lab'>가격</div><div class='detail-val'>{int(row['Price (KRW)']):,} 원</div></div>",
+            unsafe_allow_html=True
+        )
+        st.markdown("</div>", unsafe_allow_html=True)
 
         st.divider()
         st.caption("Tip: 슬라이더를 조절해 더 깐깐하게 필터링해보세요!")
@@ -431,7 +438,6 @@ def render_main():
             title_text = format_title(str(row['Cafe']), str(row['Temperature']), str(row['Name']))
 
             with cols[c]:
-                # 카드 전체를 실제 컨테이너 안에
                 with st.container(border=True):
                     top_left, top_right = st.columns([1, 0.15])
                     with top_left:
@@ -479,6 +485,7 @@ if st.session_state.page == "cover":
     render_cover()
 else:
     render_main()
+
 
 
 
