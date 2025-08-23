@@ -22,6 +22,7 @@ st.session_state.setdefault("favorites", set())    # 즐겨찾기 (id 집합)
 st.session_state.setdefault("_prev_q", "")         # 검색어 변경 감지
 
 PAGE_SIZE = 12
+
 HAS_MODAL  = hasattr(st, "modal")
 HAS_DIALOG = hasattr(st, "dialog")
 
@@ -130,32 +131,16 @@ def render_main():
         /* 결과 섹션 헤딩(작게) */
         .section-title { font-size:16px; font-weight:700; margin:0; }
 
-        /* 카드와 내부 요소 */
-        .card {
-          border: 1px solid #eee; border-radius: 16px; padding: 16px; margin-bottom: 12px;
-          box-shadow: 0 1px 6px rgba(0,0,0,0.06); height: 100%; position: relative;
-          display:flex; flex-direction:column; gap:10px; overflow:hidden;
-        }
-        .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
-        .card-title { font-weight:800; font-size:18px; line-height:1.2; }
-        .meta { color:#6b7280; font-size:13px; }
+        /* 카드 내부 구성 보조 스타일 */
+        .k-badges { margin:6px 0 2px 0; }
         .badge { display:inline-block; padding:6px 12px; border-radius:999px; font-size:12px; background:#f3f4f6; margin:4px 6px 0 0; }
-        .price-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .meta { color:#6b7280; font-size:13px; }
         .price { font-weight:800; font-size:18px; }
-        .star-btn button { padding:4px 8px !important; min-width:auto !important; border:1px solid #e5e7eb !important; }
-        .pill {display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; background:#f3f4f6; border:1px solid #eee; margin-right:6px;}
-        .kv-wrap {display:flex; flex-wrap:wrap; gap:12px; margin-top:6px;}
-        .kv-box  {background:#f9fafb; border:1px solid #eee; border-radius:12px; padding:10px 12px; min-width:130px;}
-        .kv-lab  {font-size:12px; color:#6b7280; margin-bottom:2px;}
-        .kv-val  {font-size:18px; font-weight:700; line-height:1.2;}
-        .small   {font-size:14px; color:#374151;}
-        .bold    {font-weight:700;}
-
+        .tiny-star button { padding:4px 8px !important; min-width:auto !important; border:1px solid #e5e7eb !important; }
         @media (max-width: 600px) {
           .title-emoji{ font-size:24px; }
           .title-main { font-size:28px; }
           .section-title { font-size:14px; }
-          .card-title { font-size:16px; }
         }
         </style>
         """,
@@ -187,6 +172,7 @@ def render_main():
             st.session_state.page_num = 1
             st.session_state._prev_q = q
 
+    # '결과' 위쪽 간격
     st.markdown('<div class="spacer-vertical"></div>', unsafe_allow_html=True)
 
     # ===== 사이드바: 프리셋/필터 =====
@@ -302,8 +288,8 @@ def render_main():
     with st.expander("결과 펼쳐보기"):
         # Cafe 컬럼을 가장 왼쪽으로
         if "Cafe" in filtered.columns:
-            left_first_cols = ["Cafe"] + [c for c in filtered.columns if c != "Cafe"]
-            preview_df = filtered[left_first_cols].reset_index(drop=True)
+            cols = ["Cafe"] + [c for c in filtered.columns if c != "Cafe"]
+            preview_df = filtered[cols].reset_index(drop=True)
         else:
             preview_df = filtered.reset_index(drop=True)
         st.dataframe(preview_df, use_container_width=True)
@@ -334,47 +320,21 @@ def render_main():
             else:
                 st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 저장)")
 
-            st.markdown(f"<div class='small'><span class='bold'>카페</span>: {row['Cafe']}</div>", unsafe_allow_html=True)
-            st.markdown(
-                f"<div class='small'>"
-                f"<span class='pill'>카테고리: {row['Category']}</span>"
-                f"<span class='pill'>온도: {row['Temperature']}</span>"
-                f"</div>", unsafe_allow_html=True
-            )
+            st.markdown(f"**카페:** {row['Cafe']}")
+            st.markdown(f"<span class='meta'>카테고리: {row['Category']}</span> &nbsp; <span class='meta'>온도: {row['Temperature']}</span>", unsafe_allow_html=True)
 
-            st.markdown("<div class='kv-wrap'>", unsafe_allow_html=True)
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>용량 (ml)</div>"
-                f"<div class='kv-val'>{int(row['Volume (ml)'])}</div></div>", unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>가격 (원)</div>"
-                f"<div class='kv-val'>{int(row['Price (KRW)']):,}</div></div>", unsafe_allow_html=True
-            )
+            st.markdown("<div class='k-badges'>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>용량 {int(row['Volume (ml)'])}ml</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>가격 {int(row['Price (KRW)']):,}원</span>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
-            st.markdown("<div class='kv-wrap'>", unsafe_allow_html=True)
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>칼로리 (kcal)</div>"
-                f"<div class='kv-val'>{int(row['Calories (kcal)'])}</div></div>", unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>카페인 (mg)</div>"
-                f"<div class='kv-val'>{int(row['Caffeine (mg)'])}</div></div>", unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>당류 (g)</div>"
-                f"<div class='kv-val'>{int(row['Sugar (g)'])}</div></div>", unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>지방 (g)</div>"
-                f"<div class='kv-val'>{int(row['Fat (g)'])}</div></div>", unsafe_allow_html=True
-            )
-            st.markdown(
-                f"<div class='kv-box'><div class='kv-lab'>나트륨 (mg)</div>"
-                f"<div class='kv-val'>{int(row['Sodium (mg)'])}</div></div>", unsafe_allow_html=True
-            )
+            st.markdown("<div class='k-badges'>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>당 {int(row['Sugar (g)'])}g</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>지방 {int(row['Fat (g)'])}g</span>", unsafe_allow_html=True)
+            st.markdown(f"<span class='badge'>나트륨 {int(row['Sodium (mg)'])}mg</span>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
         st.divider()
@@ -397,7 +357,7 @@ def render_main():
             detail_body(row)
             st.button("닫기", on_click=close_detail)
 
-    # ===== 카드 렌더링 =====
+    # ===== 카드 리스트 =====
     cols_per_row = 3
     rows = (len(page_df) + cols_per_row - 1) // cols_per_row
     for r in range(rows):
@@ -408,52 +368,48 @@ def render_main():
                 continue
 
             row = page_df.iloc[i]
-            title_text = format_title(str(row['Cafe']), str(row['Temperature']), str(row['Name']))
             item_id = make_item_id(row)
             is_fav = item_id in st.session_state.favorites
-
-            badges = (
-                f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>"
-                f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>"
-                f"<span class='badge'>당 {int(row['Sugar (g)'])}g</span>"
-                f"<span class='badge'>나트륨 {int(row['Sodium (mg)'])}mg</span>"
-                f"<span class='badge'>지방 {int(row['Fat (g)'])}g</span>"
-            )
+            title_text = format_title(str(row['Cafe']), str(row['Temperature']), str(row['Name']))
 
             with cols[c]:
-                st.markdown('<div class="card">', unsafe_allow_html=True)
+                # 진짜 카드 컨테이너 (모든 요소를 이 안에)
+                with st.container(border=True):
+                    top_left, top_right = st.columns([1, 0.15])
+                    with top_left:
+                        st.markdown(f"### {title_text}")
+                    with top_right:
+                        st.markdown("<div class='tiny-star'>", unsafe_allow_html=True)
+                        if st.button("⭐" if is_fav else "☆", key=f"favstar_{item_id}", help="즐겨찾기"):
+                            toggle_fav(item_id)
+                            st.rerun()
+                        st.markdown("</div>", unsafe_allow_html=True)
 
-                # 헤드: 제목 + 작아진 별 버튼
-                head_cols = st.columns([1, 0.18])
-                with head_cols[0]:
-                    st.markdown(f'<div class="card-head"><div class="card-title">{title_text}</div></div>', unsafe_allow_html=True)
-                with head_cols[1]:
-                    st.markdown('<div class="star-btn">', unsafe_allow_html=True)
-                    star_label = "⭐" if is_fav else "☆"
-                    if st.button(star_label, key=f"favstar_{item_id}", help="즐겨찾기"):
-                        toggle_fav(item_id)
-                        st.rerun()
-                    st.markdown('</div>', unsafe_allow_html=True)
+                    # 메타 한 줄
+                    st.markdown(
+                        f"<span class='meta'>카테고리: {row['Category']}</span> &nbsp;·&nbsp; "
+                        f"<span class='meta'>용량: {int(row['Volume (ml)'])} ml</span>",
+                        unsafe_allow_html=True
+                    )
 
-                # 메타: 카테고리 · 용량
-                st.markdown(
-                    f"<div class='meta'>카테고리: {row['Category']} &nbsp;·&nbsp; 용량: {int(row['Volume (ml)'])} ml</div>",
-                    unsafe_allow_html=True
-                )
+                    # 성분 뱃지들
+                    st.markdown("<div class='k-badges'>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='badge'>당 {int(row['Sugar (g)'])}g</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='badge'>나트륨 {int(row['Sodium (mg)'])}mg</span>", unsafe_allow_html=True)
+                    st.markdown(f"<span class='badge'>지방 {int(row['Fat (g)'])}g</span>", unsafe_allow_html=True)
+                    st.markdown("</div>", unsafe_allow_html=True)
 
-                # 성분 뱃지
-                st.markdown(f"<div style='margin:4px 0 2px 0;'>{badges}</div>", unsafe_allow_html=True)
+                    # 가격(좌) · 자세히보기(우)
+                    price_col, btn_col = st.columns([1, 0.5])
+                    with price_col:
+                        st.markdown(f"<div class='price'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
+                    with btn_col:
+                        if st.button("자세히 보기", key=f"detail_{item_id}"):
+                            st.session_state.detail_row = row
 
-                # 가격(좌) · 자세히 보기(우) — 같은 줄
-                st.markdown('<div class="price-row">', unsafe_allow_html=True)
-                st.markdown(f"<div class='price'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
-                if st.button("자세히 보기", key=f"detail_{item_id}"):
-                    st.session_state.detail_row = row
-                st.markdown('</div>', unsafe_allow_html=True)
-
-                st.markdown('</div>', unsafe_allow_html=True)
-
-    # 페이지 입력(우측)
+    # 페이지 입력
     right_spacer, right_ctrl = st.columns([5, 1])
     with right_ctrl:
         st.number_input("페이지", min_value=1, max_value=pages, value=st.session_state.page_num, step=1, key="page_num")
@@ -469,5 +425,6 @@ if st.session_state.page == "cover":
     render_cover()
 else:
     render_main()
+
 
 
