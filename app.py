@@ -169,7 +169,7 @@ def render_main():
     # 동일 폭 버튼 + 이모지 아이콘
     c1, c2, c3 = st.sidebar.columns(3)
     with c1:
-        if st.button("🔥 저칼로리", use_container_width=True, key="preset_lowcal"):
+        if st.button("🔥 칼로리 줄이기", use_container_width=True, key="preset_lowcal"):
             st.session_state.filters = {"calorie_max": 120}
     with c2:
         if st.button("🍬 당 줄이기", use_container_width=True, key="preset_lowsugar"):
