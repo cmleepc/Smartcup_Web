@@ -21,10 +21,7 @@ st.session_state.setdefault("recent", [])          # 최근 본 음료 (id 리�
 st.session_state.setdefault("favorites", set())    # 즐겨찾기 (id 집합)
 st.session_state.setdefault("_prev_q", "")         # 검색어 변경 감지
 
-# 고정: 페이지당 카드 수
 PAGE_SIZE = 12
-
-# 호환성: modal/dialog 존재 확인
 HAS_MODAL  = hasattr(st, "modal")
 HAS_DIALOG = hasattr(st, "dialog")
 
@@ -41,7 +38,6 @@ def find_image_path(cafe: str, name: str):
     return cand1 if cand1.exists() else (cand2 if cand2.exists() else None)
 
 def format_title(cafe: str, temp: str, name: str) -> str:
-    """이름이 이미 ICE/HOT로 시작하면 중복 방지."""
     nm = str(name).strip()
     nm_u = nm.upper()
     starts_with_temp = nm_u.startswith("ICE ") or nm_u.startswith("HOT ")
@@ -49,7 +45,6 @@ def format_title(cafe: str, temp: str, name: str) -> str:
     return f"{cafe}: {prefix}{nm}".strip()
 
 def make_item_id(row: pd.Series) -> str:
-    """데이터에 고유 ID 컬럼이 없다면 Cafe+Name 조합으로 식별자 생성"""
     return f"{row['Cafe']}||{row['Name']}"
 
 def mark_as_viewed(item_id: str):
@@ -57,7 +52,7 @@ def mark_as_viewed(item_id: str):
     if item_id in rec:
         rec.remove(item_id)
     rec.insert(0, item_id)
-    st.session_state.recent = rec[:20]  # 최대 20개만
+    st.session_state.recent = rec[:20]
 
 def toggle_fav(item_id: str):
     fav = set(st.session_state.favorites)
@@ -71,7 +66,6 @@ def toggle_fav(item_id: str):
 # 표지 페이지
 # =========================
 def render_cover():
-    # 표지 스타일 (가운데 정렬 + 반응형 폰트)
     st.markdown(
         """
         <style>
@@ -109,7 +103,6 @@ def render_cover():
 
     st.markdown("---")
 
-    # 버튼을 중앙에 정확히 배치 (3열 레이아웃에서 가운데 칸 사용)
     left_sp, center_col, right_sp = st.columns([3, 1, 3])
     with center_col:
         if st.button("🚀 시작하기", key="start_btn"):
@@ -121,10 +114,10 @@ def render_cover():
 def render_main():
     df = pd.read_csv(CSV_PATH)
 
-    # ===== 상단 캡션 =====
+    # 상단 캡션
     st.caption("왼쪽 사이드바의 필터를 눌러 자유롭게 필터링해보세요.")
 
-    # ===== 제목(아이콘+크기 업), 검색 =====
+    # ===== 상단 타이틀/검색 + 전역 스타일 =====
     st.markdown(
         """
         <style>
@@ -137,21 +130,20 @@ def render_main():
         /* 결과 섹션 헤딩(작게) */
         .section-title { font-size:16px; font-weight:700; margin:0; }
 
-        /* 카드 및 모달 공통 스타일 */
+        /* 카드와 내부 요소 */
         .card {
-          border: 1px solid #eee; border-radius: 16px; padding: 14px; margin-bottom: 12px;
+          border: 1px solid #eee; border-radius: 16px; padding: 16px; margin-bottom: 12px;
           box-shadow: 0 1px 6px rgba(0,0,0,0.06); height: 100%; position: relative;
-          display:flex; flex-direction:column; gap:8px;
+          display:flex; flex-direction:column; gap:10px; overflow:hidden;
         }
-        .card-head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
-        .card-title { font-weight:800; font-size:16px; line-height:1.2; }
+        .card-head { display:flex; align-items:flex-start; justify-content:space-between; gap:8px; }
+        .card-title { font-weight:800; font-size:18px; line-height:1.2; }
         .meta { color:#6b7280; font-size:13px; }
-        .price { font-weight:700; }
-        .badge { display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; background:#f3f4f6; margin:4px 6px 0 0; }
-        .card-footer { margin-top:auto; display:flex; justify-content:flex-end; }
-        .star-btn button { border-radius:999px !important; padding:2px 8px !important; }
-        .pill {display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px;
-               background:#f3f4f6; border:1px solid #eee; margin-right:6px;}
+        .badge { display:inline-block; padding:6px 12px; border-radius:999px; font-size:12px; background:#f3f4f6; margin:4px 6px 0 0; }
+        .price-row { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .price { font-weight:800; font-size:18px; }
+        .star-btn button { padding:4px 8px !important; min-width:auto !important; border:1px solid #e5e7eb !important; }
+        .pill {display:inline-block; padding:4px 10px; border-radius:999px; font-size:12px; background:#f3f4f6; border:1px solid #eee; margin-right:6px;}
         .kv-wrap {display:flex; flex-wrap:wrap; gap:12px; margin-top:6px;}
         .kv-box  {background:#f9fafb; border:1px solid #eee; border-radius:12px; padding:10px 12px; min-width:130px;}
         .kv-lab  {font-size:12px; color:#6b7280; margin-bottom:2px;}
@@ -163,7 +155,7 @@ def render_main():
           .title-emoji{ font-size:24px; }
           .title-main { font-size:28px; }
           .section-title { font-size:14px; }
-          .card-title { font-size:15px; }
+          .card-title { font-size:16px; }
         }
         </style>
         """,
@@ -195,12 +187,10 @@ def render_main():
             st.session_state.page_num = 1
             st.session_state._prev_q = q
 
-    # '결과' 위쪽 간격
     st.markdown('<div class="spacer-vertical"></div>', unsafe_allow_html=True)
 
     # ===== 사이드바: 프리셋/필터 =====
     st.sidebar.header("🚀 추천/가이드 MODE")
-
     c1, c2, c3 = st.sidebar.columns(3)
     with c1:
         if st.button("🔥 저칼로리", use_container_width=True, key="preset_lowcal"):
@@ -219,13 +209,11 @@ def render_main():
 
     cafes_all_toggle = st.sidebar.checkbox("카페 전체 보기", value=True)
     selected_cafes = all_cafes if cafes_all_toggle else st.sidebar.multiselect("카페 선택 (복수 가능)", options=all_cafes, default=[])
-
     cats_all_toggle = st.sidebar.checkbox("카테고리 전체 보기", value=True)
     selected_category = all_cats if cats_all_toggle else st.sidebar.multiselect("카테고리 선택 (복수 가능)", options=all_cats, default=[])
-
     selected_temp = st.sidebar.selectbox("온도", ["전체"] + all_temps)
 
-    # 프리셋 기본값 반영 (없으면 최대치로)
+    # 프리셋 기본값 반영
     cal_max = st.session_state.filters.get("calorie_max", int(df["Calories (kcal)"].max()))
     sug_max = st.session_state.filters.get("sugar_g_max",   int(df["Sugar (g)"].max()))
     caf_max = st.session_state.filters.get("caffeine_mg_max", int(df["Caffeine (mg)"].max()))
@@ -239,7 +227,6 @@ def render_main():
 
     fav_only = st.sidebar.checkbox("⭐ 즐겨찾기만 보기", value=False)
 
-    # 즐겨찾기 / 최근본 음료 순서 (즐겨찾기 먼저)
     with st.sidebar.expander("⭐ 즐겨찾기"):
         if st.session_state.favorites:
             for iid in list(st.session_state.favorites)[:8]:
@@ -258,7 +245,6 @@ def render_main():
 
     # ===== 필터링 =====
     filtered = df.copy()
-
     if q:
         mask_q = (
             filtered["Name"].str.contains(q, case=False, na=False) |
@@ -284,12 +270,11 @@ def render_main():
     ]
 
     if fav_only:
-        # 즐겨찾기만 보기
         filtered_ids = filtered.apply(make_item_id, axis=1)
         mask = filtered_ids.isin(st.session_state.favorites)
         filtered = filtered[mask]
 
-    # ===== 결과 헤딩(작게) + 정렬 옵션 =====
+    # ===== 결과 + 정렬 =====
     st.markdown('<h3 class="section-title">결과</h3>', unsafe_allow_html=True)
 
     sort_options = [
@@ -312,11 +297,10 @@ def render_main():
     sort_col, asc = sort_map[sort_key]
     filtered = filtered.sort_values(sort_col, ascending=asc)
 
-    # ===== 결과 숫자 + 미리보기(미리보기에서 Cafe를 맨 왼쪽으로) =====
     st.markdown(f"🔎 **{len(filtered)}개 음료가 조건에 부합합니다.**")
 
     with st.expander("결과 펼쳐보기"):
-        # Cafe 컬럼을 가장 왼쪽으로 재배치
+        # Cafe 컬럼을 가장 왼쪽으로
         if "Cafe" in filtered.columns:
             left_first_cols = ["Cafe"] + [c for c in filtered.columns if c != "Cafe"]
             preview_df = filtered[left_first_cols].reset_index(drop=True)
@@ -329,17 +313,15 @@ def render_main():
     total = len(filtered)
     pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
     st.session_state.page_num = min(max(1, st.session_state.page_num), pages)
-
     start = (st.session_state.page_num - 1) * PAGE_SIZE
     end = start + PAGE_SIZE
     page_df = filtered.iloc[start:end].reset_index(drop=True)
 
-    # ===== 상세 모달 내용 =====
+    # ===== 상세 모달 =====
     def close_detail():
         st.session_state.detail_row = None
 
     def detail_body(row: pd.Series):
-        # 최근 본 음료 기록
         item_id = make_item_id(row)
         mark_as_viewed(item_id)
 
@@ -352,7 +334,6 @@ def render_main():
             else:
                 st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 저장)")
 
-            # 기본 정보: 카페 Bold, 카테고리/온도 pill
             st.markdown(f"<div class='small'><span class='bold'>카페</span>: {row['Cafe']}</div>", unsafe_allow_html=True)
             st.markdown(
                 f"<div class='small'>"
@@ -361,7 +342,6 @@ def render_main():
                 f"</div>", unsafe_allow_html=True
             )
 
-            # 용량/가격 박스
             st.markdown("<div class='kv-wrap'>", unsafe_allow_html=True)
             st.markdown(
                 f"<div class='kv-box'><div class='kv-lab'>용량 (ml)</div>"
@@ -374,7 +354,6 @@ def render_main():
             st.markdown("</div>", unsafe_allow_html=True)
 
         with col2:
-            # 영양성분 5개 박스
             st.markdown("<div class='kv-wrap'>", unsafe_allow_html=True)
             st.markdown(
                 f"<div class='kv-box'><div class='kv-lab'>칼로리 (kcal)</div>"
@@ -403,25 +382,24 @@ def render_main():
 
     def open_detail(row: pd.Series):
         title = f"🍹 {row['Name']} 상세 정보"
-        if HAS_MODAL:                      # 최신 Streamlit
+        if HAS_MODAL:
             with st.modal(title, key=f"modal-{row.name}"):
                 detail_body(row)
                 st.button("닫기", on_click=close_detail, use_container_width=True)
-        elif HAS_DIALOG:                   # 일부 버전
+        elif HAS_DIALOG:
             @st.dialog(title)
             def _dlg():
                 detail_body(row)
                 st.button("닫기", on_click=close_detail, use_container_width=True)
             _dlg()
-        else:                              # 완전 폴백
+        else:
             st.markdown(f"### {title}")
             detail_body(row)
             st.button("닫기", on_click=close_detail)
 
-    # ===== 카드 렌더링 (제목+별 / 메타 / 푸터 버튼) =====
+    # ===== 카드 렌더링 =====
     cols_per_row = 3
     rows = (len(page_df) + cols_per_row - 1) // cols_per_row
-
     for r in range(rows):
         cols = st.columns(cols_per_row)
         for c in range(cols_per_row):
@@ -434,7 +412,6 @@ def render_main():
             item_id = make_item_id(row)
             is_fav = item_id in st.session_state.favorites
 
-            # 뱃지 (원하시면 용량을 맨 앞에 두도록 변경 가능)
             badges = (
                 f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>"
                 f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>"
@@ -446,46 +423,40 @@ def render_main():
             with cols[c]:
                 st.markdown('<div class="card">', unsafe_allow_html=True)
 
-                # 카드 헤드: 제목(좌) + 별(우) — 겹침 방지 위해 두 컬럼 분리
+                # 헤드: 제목 + 작아진 별 버튼
                 head_cols = st.columns([1, 0.18])
                 with head_cols[0]:
-                    st.markdown(
-                        f'<div class="card-head"><div class="card-title">{title_text}</div></div>',
-                        unsafe_allow_html=True
-                    )
+                    st.markdown(f'<div class="card-head"><div class="card-title">{title_text}</div></div>', unsafe_allow_html=True)
                 with head_cols[1]:
+                    st.markdown('<div class="star-btn">', unsafe_allow_html=True)
                     star_label = "⭐" if is_fav else "☆"
-                    # 클릭 즉시 재렌더로 토글 순서 꼬임 방지
-                    if st.button(star_label, key=f"favstar_{item_id}", help="즐겨찾기", type="secondary"):
+                    if st.button(star_label, key=f"favstar_{item_id}", help="즐겨찾기"):
                         toggle_fav(item_id)
                         st.rerun()
+                    st.markdown('</div>', unsafe_allow_html=True)
 
-                # 메타 줄: 카테고리 + 용량 같은 줄
+                # 메타: 카테고리 · 용량
                 st.markdown(
                     f"<div class='meta'>카테고리: {row['Category']} &nbsp;·&nbsp; 용량: {int(row['Volume (ml)'])} ml</div>",
                     unsafe_allow_html=True
                 )
 
-                # 뱃지/가격
-                st.markdown(f"<div style='margin:8px 0;'>{badges}</div>", unsafe_allow_html=True)
-                st.markdown(f"<div style='margin-top:4px;' class='price'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
+                # 성분 뱃지
+                st.markdown(f"<div style='margin:4px 0 2px 0;'>{badges}</div>", unsafe_allow_html=True)
 
-                # 카드 하단: 오른쪽 '자세히 보기'
-                st.markdown('<div class="card-footer">', unsafe_allow_html=True)
+                # 가격(좌) · 자세히 보기(우) — 같은 줄
+                st.markdown('<div class="price-row">', unsafe_allow_html=True)
+                st.markdown(f"<div class='price'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
                 if st.button("자세히 보기", key=f"detail_{item_id}"):
                     st.session_state.detail_row = row
                 st.markdown('</div>', unsafe_allow_html=True)
 
                 st.markdown('</div>', unsafe_allow_html=True)
 
-    # 페이지 선택(카드 아래 오른쪽)
+    # 페이지 입력(우측)
     right_spacer, right_ctrl = st.columns([5, 1])
     with right_ctrl:
-        st.number_input(
-            "페이지",
-            min_value=1, max_value=pages,
-            value=st.session_state.page_num, step=1, key="page_num"
-        )
+        st.number_input("페이지", min_value=1, max_value=pages, value=st.session_state.page_num, step=1, key="page_num")
 
     # 상세 표시
     if st.session_state.detail_row is not None:
