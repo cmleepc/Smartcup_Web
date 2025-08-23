@@ -32,40 +32,48 @@ def safe_filename(text: str) -> str:
     return str(text).replace(" ", "_").replace("/", "-").replace("\\", "-").strip()
 
 # --- 교체된 이미지 탐색 함수 ---
+# 교체하세요
 def find_image_path(cafe: str, name: str, temp: str = ""):
     """
-    images/ 디렉토리에서 다음 우선순위로 파일을 찾는다.
-    1) {Cafe}_{Name}.{jpg|jpeg|png}
-    2) {Cafe}_{Temp} {Name}.{jpg|jpeg|png}   예: 스타벅스_HOT 카페라떼.jpg
-    safe_filename() 규칙: 공백 -> _, /,\ -> -
+    images/ 에서 아래 우선순위로 파일 탐색 (확장자 대/소문자 허용)
+    1) Cafe_Name
+    2) Cafe_Temp Name
+    - 각 패턴마다 공백/언더스코어 두 버전 모두 시도
     """
-    def try_exts(base_no_ext: str):
-        for ext in (".jpg", ".jpeg", ".png"):
-            p = IMG_DIR / f"{base_no_ext}{ext}"
-            if p.exists():
-                return p
+    # 확장자 후보 (대/소문자 모두)
+    exts = [".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"]
+
+    def try_paths(bases):
+        for base in bases:
+            for ext in exts:
+                p = IMG_DIR / f"{base}{ext}"
+                if p.exists():
+                    return p
         return None
 
-    cafe_s = safe_filename(cafe)
-    name_s = safe_filename(name)
-    temp_s = safe_filename(temp) if temp else ""
+    # 원문(공백 유지) / 안전형(언더스코어) 모두 준비
+    cafe_raw, name_raw, temp_raw = str(cafe).strip(), str(name).strip(), str(temp or "").strip()
+    cafe_s  = safe_filename(cafe_raw)
+    name_s  = safe_filename(name_raw)
+    temp_s  = safe_filename(temp_raw) if temp_raw else ""
 
-    # 1) 카페_메뉴
-    p = try_exts(f"{cafe_s}_{name_s}")
-    if p:
-        return p
+    bases = []
 
-    # 2) 카페_온도_메뉴 (온도와 메뉴 사이 공백 버전도 시도)
-    if temp_s:
-        p = try_exts(f"{cafe_s}_{temp_s}_{name_s}")      # 예: 스타벅스_HOT_카페라떼
-        if p:
-            return p
-        raw_temp_name = safe_filename(f"{temp} {name}")  # 예: HOT 카페라떼 -> HOT_카페라떼
-        p = try_exts(f"{cafe_s}_{raw_temp_name}")        # 예: 스타벅스_HOT_카페라떼
-        if p:
-            return p
+    # --- 1) Cafe_Name ---
+    bases += [
+        f"{cafe_raw}_{name_raw}",   # 공백 버전
+        f"{cafe_s}_{name_s}",       # 언더스코어 버전
+    ]
 
-    return None
+    # --- 2) Cafe_Temp Name ---
+    if temp_raw:
+        # 공백 버전 (예: 스타벅스_HOT 카페 라떼)
+        bases.append(f"{cafe_raw}_{temp_raw} {name_raw}")
+        # 언더스코어 버전 (예: 스타벅스_HOT_카페_라떼)
+        bases.append(f"{cafe_s}_{temp_s}_{name_s}")
+
+    return try_paths(bases)
+
 
 def format_title(cafe: str, temp: str, name: str) -> str:
     nm = str(name).strip()
