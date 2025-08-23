@@ -10,7 +10,7 @@ st.set_page_config(page_title="스마트컵", layout="wide")
 
 DATA_DIR = Path(__file__).parent
 CSV_PATH = DATA_DIR / "smartcup_final_6.csv"
-IMG_DIR  = DATA_DIR / "images"   # images/{카페명}_{음료명}.jpg 또는 .jpeg
+IMG_DIR  = DATA_DIR / "images"   # images/{카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg
 
 # 세션 상태 초기화
 st.session_state.setdefault("page", "cover")
@@ -22,7 +22,6 @@ st.session_state.setdefault("favorites", set())    # 즐겨찾기 (id 집합)
 st.session_state.setdefault("_prev_q", "")         # 검색어 변경 감지
 
 PAGE_SIZE = 12
-
 HAS_MODAL  = hasattr(st, "modal")
 HAS_DIALOG = hasattr(st, "dialog")
 
@@ -32,11 +31,41 @@ HAS_DIALOG = hasattr(st, "dialog")
 def safe_filename(text: str) -> str:
     return str(text).replace(" ", "_").replace("/", "-").replace("\\", "-").strip()
 
-def find_image_path(cafe: str, name: str):
-    base = f"{safe_filename(cafe)}_{safe_filename(name)}"
-    cand1 = IMG_DIR / f"{base}.jpg"
-    cand2 = IMG_DIR / f"{base}.jpeg"
-    return cand1 if cand1.exists() else (cand2 if cand2.exists() else None)
+# --- 교체된 이미지 탐색 함수 ---
+def find_image_path(cafe: str, name: str, temp: str = ""):
+    """
+    images/ 디렉토리에서 다음 우선순위로 파일을 찾는다.
+    1) {Cafe}_{Name}.{jpg|jpeg|png}
+    2) {Cafe}_{Temp} {Name}.{jpg|jpeg|png}   예: 스타벅스_HOT 카페라떼.jpg
+    safe_filename() 규칙: 공백 -> _, /,\ -> -
+    """
+    def try_exts(base_no_ext: str):
+        for ext in (".jpg", ".jpeg", ".png"):
+            p = IMG_DIR / f"{base_no_ext}{ext}"
+            if p.exists():
+                return p
+        return None
+
+    cafe_s = safe_filename(cafe)
+    name_s = safe_filename(name)
+    temp_s = safe_filename(temp) if temp else ""
+
+    # 1) 카페_메뉴
+    p = try_exts(f"{cafe_s}_{name_s}")
+    if p:
+        return p
+
+    # 2) 카페_온도_메뉴 (온도와 메뉴 사이 공백 버전도 시도)
+    if temp_s:
+        p = try_exts(f"{cafe_s}_{temp_s}_{name_s}")      # 예: 스타벅스_HOT_카페라떼
+        if p:
+            return p
+        raw_temp_name = safe_filename(f"{temp} {name}")  # 예: HOT 카페라떼 -> HOT_카페라떼
+        p = try_exts(f"{cafe_s}_{raw_temp_name}")        # 예: 스타벅스_HOT_카페라떼
+        if p:
+            return p
+
+    return None
 
 def format_title(cafe: str, temp: str, name: str) -> str:
     nm = str(name).strip()
@@ -103,7 +132,6 @@ def render_cover():
     )
 
     st.markdown("---")
-
     left_sp, center_col, right_sp = st.columns([3, 1, 3])
     with center_col:
         if st.button("🚀 시작하기", key="start_btn"):
@@ -128,10 +156,9 @@ def render_main():
         .title-main { font-size:32px; font-weight:900; letter-spacing:0.3px; }
         .spacer-vertical{ height:18px; }  /* '결과' 위쪽 여백 */
 
-        /* 결과 섹션 헤딩(작게) */
-        .section-title { font-size:16px; font-weight:700; margin:0; }
+        .section-title { font-size:16px; font-weight:700; margin:0; } /* 결과 헤딩 작게 */
 
-        /* 카드 내부 구성 보조 스타일 */
+        /* 카드/요소 */
         .k-badges { margin:6px 0 2px 0; }
         .badge { display:inline-block; padding:6px 12px; border-radius:999px; font-size:12px; background:#f3f4f6; margin:4px 6px 0 0; }
         .meta { color:#6b7280; font-size:13px; }
@@ -172,7 +199,6 @@ def render_main():
             st.session_state.page_num = 1
             st.session_state._prev_q = q
 
-    # '결과' 위쪽 간격
     st.markdown('<div class="spacer-vertical"></div>', unsafe_allow_html=True)
 
     # ===== 사이드바: 프리셋/필터 =====
@@ -286,7 +312,6 @@ def render_main():
     st.markdown(f"🔎 **{len(filtered)}개 음료가 조건에 부합합니다.**")
 
     with st.expander("결과 펼쳐보기"):
-        # Cafe 컬럼을 가장 왼쪽으로
         if "Cafe" in filtered.columns:
             cols = ["Cafe"] + [c for c in filtered.columns if c != "Cafe"]
             preview_df = filtered[cols].reset_index(drop=True)
@@ -311,14 +336,16 @@ def render_main():
         item_id = make_item_id(row)
         mark_as_viewed(item_id)
 
-        img_path = find_image_path(row["Cafe"], row["Name"])
+        # --- 온도까지 포함해 이미지 찾기 ---
+        img_path = find_image_path(row["Cafe"], row["Name"], row.get("Temperature", ""))
+
         col1, col2 = st.columns([1,1])
 
         with col1:
             if img_path:
                 st.image(str(img_path), caption=row["Name"], use_column_width=True)
             else:
-                st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 저장)")
+                st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg 저장)")
 
             st.markdown(f"**카페:** {row['Cafe']}")
             st.markdown(f"<span class='meta'>카테고리: {row['Category']}</span> &nbsp; <span class='meta'>온도: {row['Temperature']}</span>", unsafe_allow_html=True)
@@ -373,7 +400,7 @@ def render_main():
             title_text = format_title(str(row['Cafe']), str(row['Temperature']), str(row['Name']))
 
             with cols[c]:
-                # 진짜 카드 컨테이너 (모든 요소를 이 안에)
+                # 카드 전체를 실제 컨테이너 안에
                 with st.container(border=True):
                     top_left, top_right = st.columns([1, 0.15])
                     with top_left:
@@ -385,14 +412,12 @@ def render_main():
                             st.rerun()
                         st.markdown("</div>", unsafe_allow_html=True)
 
-                    # 메타 한 줄
                     st.markdown(
                         f"<span class='meta'>카테고리: {row['Category']}</span> &nbsp;·&nbsp; "
                         f"<span class='meta'>용량: {int(row['Volume (ml)'])} ml</span>",
                         unsafe_allow_html=True
                     )
 
-                    # 성분 뱃지들
                     st.markdown("<div class='k-badges'>", unsafe_allow_html=True)
                     st.markdown(f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>", unsafe_allow_html=True)
                     st.markdown(f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>", unsafe_allow_html=True)
@@ -401,7 +426,6 @@ def render_main():
                     st.markdown(f"<span class='badge'>지방 {int(row['Fat (g)'])}g</span>", unsafe_allow_html=True)
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                    # 가격(좌) · 자세히보기(우)
                     price_col, btn_col = st.columns([1, 0.5])
                     with price_col:
                         st.markdown(f"<div class='price'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
@@ -414,7 +438,6 @@ def render_main():
     with right_ctrl:
         st.number_input("페이지", min_value=1, max_value=pages, value=st.session_state.page_num, step=1, key="page_num")
 
-    # 상세 표시
     if st.session_state.detail_row is not None:
         open_detail(st.session_state.detail_row)
 
