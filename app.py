@@ -174,7 +174,7 @@ def render_main():
 
     # ===== 전역 스타일 보강 (간격/배지/온도 색상) =====
 # (render_main() 안) 전역 스타일 정의 부분 전체를 아래로 교체
-st.markdown(
+    st.markdown(
     """
     <style>
     .title-wrap { display:flex; flex-direction:column; gap:4px; }
@@ -221,7 +221,7 @@ st.markdown(
     </style>
     """,
     unsafe_allow_html=True
-)
+    )
 
 
     # ===== 검색: 띄어쓰기/하이픈/언더스코어 무시 =====
