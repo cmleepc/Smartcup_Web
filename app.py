@@ -173,43 +173,56 @@ def render_main():
     df = pd.read_csv(CSV_PATH)
 
     # ===== 전역 스타일 보강 (간격/배지/온도 색상) =====
-    st.markdown(
-        """
-        <style>
-        .title-wrap { display:flex; flex-direction:column; gap:4px; }
-        .title-row  { display:flex; align-items:center; gap:10px; }
-        .title-emoji{ font-size:28px; line-height:1; }
-        .title-main { font-size:32px; font-weight:900; letter-spacing:0.3px; }
-        .spacer-vertical{ height:18px; }
+# (render_main() 안) 전역 스타일 정의 부분 전체를 아래로 교체
+st.markdown(
+    """
+    <style>
+    .title-wrap { display:flex; flex-direction:column; gap:4px; }
+    .title-row  { display:flex; align-items:center; gap:10px; }
+    .title-emoji{ font-size:28px; line-height:1; }
+    .title-main { font-size:32px; font-weight:900; letter-spacing:0.3px; }
+    .spacer-vertical{ height:18px; }
 
-        .section-title { font-size:16px; font-weight:700; margin:0; }
+    .section-title { font-size:16px; font-weight:700; margin:0; }
 
-        .k-badges { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 2px 0; }
-        .badge { display:inline-block; padding:6px 12px; border-radius:999px; font-size:12px; background:#f3f4f6; }
-        .badge-pill { border-radius:999px; padding:6px 12px; font-size:12px; }
-        .meta { color:#6b7280; font-size:13px; }
-        .price { font-weight:800; font-size:18px; }
-        .tiny-star button { padding:4px 8px !important; min-width:auto !important; border:1px solid #e5e7eb !important; }
+    /* === 배지/칩을 더 작게 (콤팩트) === */
+    .k-badges { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 0 0; }
+    .badge,
+    .badge-pill {
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;          /* 6x12 → 4x10 */
+      border-radius:999px;
+      font-size:11px;            /* 12px → 11px */
+      line-height:1;
+      background:#f3f4f6;
+      white-space:nowrap;
+    }
 
-        /* 온도 색상 */
-        .temp-hot  { background:#ffe4ec; }   /* 연핑크 */
-        .temp-ice  { background:#e6f3ff; }   /* 연하늘 */
-        .temp-etc  { background:#f3f4f6; }
+    /* 온도 색상 (연핑크/연하늘 유지) */
+    .temp-hot  { background:#ffe4ec; }
+    .temp-ice  { background:#e6f3ff; }
+    .temp-etc  { background:#f3f4f6; }
 
-        /* 세부 섹션 간격 */
-        .mt-8 { margin-top:8px; }
-        .mt-12 { margin-top:12px; }
-        .mt-16 { margin-top:16px; }
+    /* 텍스트도 약간만 콤팩트 */
+    .meta  { color:#6b7280; font-size:12px; }  /* 13px → 12px */
+    .price { font-weight:800; font-size:17px; }/* 18px → 17px */
 
-        @media (max-width: 600px) {
-          .title-emoji{ font-size:24px; }
-          .title-main { font-size:28px; }
-          .section-title { font-size:14px; }
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    /* 섹션 간격 살짝 축소 */
+    .mt-8  { margin-top:6px; }   /* 8 → 6 */
+    .mt-12 { margin-top:10px; }  /* 12 → 10 */
+    .mt-16 { margin-top:12px; }  /* 16 → 12 */
+
+    @media (max-width: 600px) {
+      .title-emoji{ font-size:24px; }
+      .title-main { font-size:28px; }
+      .section-title { font-size:14px; }
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 
     # ===== 검색: 띄어쓰기/하이픈/언더스코어 무시 =====
     for col in ["Name", "Cafe", "Category"]:
