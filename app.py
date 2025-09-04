@@ -174,54 +174,36 @@ def render_main():
 
     # ===== 전역 스타일 보강 (간격/배지/온도 색상) =====
 # (render_main() 안) 전역 스타일 정의 부분 전체를 아래로 교체
-    st.markdown(
-    """
+    st.markdown("""
     <style>
-    .title-wrap { display:flex; flex-direction:column; gap:4px; }
-    .title-row  { display:flex; align-items:center; gap:10px; }
-    .title-emoji{ font-size:28px; line-height:1; }
-    .title-main { font-size:32px; font-weight:900; letter-spacing:0.3px; }
-    .spacer-vertical{ height:18px; }
-
-    .section-title { font-size:16px; font-weight:700; margin:0; }
-
-    /* === 배지/칩을 더 작게 (콤팩트) === */
-    .k-badges { display:flex; flex-wrap:wrap; gap:6px; margin:6px 0 0 0; }
-    .badge,
-    .badge-pill {
-      display:inline-flex;
-      align-items:center;
-      padding:3px 8px;          
-      border-radius:999px;
-      font-size:10px;           
-      line-height:1;
-      background:#f3f4f6;
-      white-space:nowrap;
+    /* ✅ 영양성분 칩: 상자 작게, 글자 크게 */
+    .k-badges { gap:4px !important; margin:4px 0 0 0 !important; }
+    
+    /* div로 만든 배지도 inline-flex로 강제 전환 (높이 낭비 제거) */
+    .badge, .badge-pill, div.badge, div.badge-pill {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    
+      /* 상자 크기 ↓ */
+      padding: 2px 8px !important;     /* before: 6px 12px */
+      border-radius: 999px !important;
+      background: #f3f4f6 !important;
+    
+      /* 글자 크기 ↑, 줄간격 ↓ */
+      font-size: 13px !important;      /* before: 11~12px */
+      line-height: 1.05 !important;    /* before: 1.4~1.6 (브라우저 기본) */
+    
+      /* 여백 최소화 */
+      margin: 0 !important;
     }
-
-    /* 온도 색상 (연핑크/연하늘 유지) */
-    .temp-hot  { background:#ffe4ec; }
-    .temp-ice  { background:#e6f3ff; }
-    .temp-etc  { background:#f3f4f6; }
-
-    /* 텍스트도 약간만 콤팩트 */
-    .meta  { color:#6b7280; font-size:12px; }  /* 13px → 12px */
-    .price { font-weight:800; font-size:17px; }/* 18px → 17px */
-
-    /* 섹션 간격 살짝 축소 */
-    .mt-8  { margin-top:6px; }   /* 8 → 6 */
-    .mt-12 { margin-top:10px; }  /* 12 → 10 */
-    .mt-16 { margin-top:12px; }  /* 16 → 12 */
-
-    @media (max-width: 600px) {
-      .title-emoji{ font-size:24px; }
-      .title-main { font-size:28px; }
-      .section-title { font-size:14px; }
-    }
+    
+    /* 온도 색상 유지 */
+    .temp-hot  { background:#ffe4ec !important; }
+    .temp-ice  { background:#e6f3ff !important; }
+    .temp-etc  { background:#f3f4f6 !important; }
     </style>
-    """,
-    unsafe_allow_html=True
-    )
+    """, unsafe_allow_html=True)
 
 
     # ===== 검색: 띄어쓰기/하이픈/언더스코어 무시 =====
