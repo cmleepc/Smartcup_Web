@@ -191,9 +191,9 @@ def render_main():
     .badge-pill {
       display:inline-flex;
       align-items:center;
-      padding:4px 10px;          /* 6x12 → 4x10 */
+      padding:3px 8px;          
       border-radius:999px;
-      font-size:11px;            /* 12px → 11px */
+      font-size:10px;           
       line-height:1;
       background:#f3f4f6;
       white-space:nowrap;
