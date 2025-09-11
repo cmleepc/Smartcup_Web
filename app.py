@@ -178,7 +178,7 @@ def render_main():
     .mt-8{ margin-top:6px; } .mt-12{ margin-top:8px; }
 
     /* ===== 상세 모달 전용 ===== */
-    .detail-meta-wrap{ margin-left:24px; margin-top:8px; }
+    .detail-meta-wrap{ margin-left:40px; margin-top:8px; }
     .detail-meta-line{ margin:12px 0; font-size:16px; line-height:1.25; }
     .meta-label{ font-weight:700; }
     .meta-value{ font-weight:400; }
