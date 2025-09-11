@@ -227,7 +227,7 @@ def render_main():
         q = st.text_input(
             " ",
             key="search_q",
-            placeholder="🔎 음료명/카페/카테고리 검색 (띄어쓰기 무시)",
+            placeholder="🔎 음료명/카페/카테고리 검색",
             label_visibility="collapsed",
             help="예) 라떼, 투썸, 프라푸치노"
         )
