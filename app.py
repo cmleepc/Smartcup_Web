@@ -118,7 +118,7 @@ def close_and_rerun():
     st.session_state.detail_row = None
     try:
         st.rerun()
-    except:  # Streamlit 버전에 따라 호출 불가일 수 있음
+    except:
         pass
 
 # =========================
@@ -161,6 +161,7 @@ def render_cover():
     )
 
     st.markdown("---")
+    # 버튼을 살짝 오른쪽으로
     left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
     with center_col:
         if st.button("🚀 시작하기", key="start_btn"):
@@ -172,39 +173,66 @@ def render_cover():
 def render_main():
     df = pd.read_csv(CSV_PATH)
 
-    # ===== 전역 스타일 보강 (간격/배지/온도 색상) =====
-# (render_main() 안) 전역 스타일 정의 부분 전체를 아래로 교체
+    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기) =====
     st.markdown("""
     <style>
-    /* ✅ 영양성분 칩: 상자 작게, 글자 크게 */
-    .k-badges { gap:4px !important; margin:4px 0 0 0 !important; }
-    
-    /* div로 만든 배지도 inline-flex로 강제 전환 (높이 낭비 제거) */
-    .badge, .badge-pill, div.badge, div.badge-pill {
-      display: inline-flex !important;
-      align-items: center !important;
-      justify-content: center !important;
-    
-      /* 상자 크기 ↓ */
-      padding: 2px 8px !important;     /* before: 6px 12px */
-      border-radius: 999px !important;
-      background: #f3f4f6 !important;
-    
-      /* 글자 크기 ↑, 줄간격 ↓ */
-      font-size: 13px !important;      /* before: 11~12px */
-      line-height: 1.05 !important;    /* before: 1.4~1.6 (브라우저 기본) */
-    
-      /* 여백 최소화 */
-      margin: 0 !important;
+    /* 카드 제목(카페명:음료명) 크기 ↓ */
+    .card-title{
+      font-size:24px;
+      font-weight:800;
+      line-height:1.2;
+      margin:0 0 6px 0;
     }
-    
-    /* 온도 색상 유지 */
-    .temp-hot  { background:#ffe4ec !important; }
-    .temp-ice  { background:#e6f3ff !important; }
-    .temp-etc  { background:#f3f4f6 !important; }
+
+    .meta{
+      font-size:14px;
+      color:#4b5563;
+      margin-top:2px;
+    }
+
+    .k-badges{ gap:4px !important; margin:4px 0 0 0 !important; }
+
+    .badge, .badge-pill, div.badge, div.badge-pill{
+      display:inline-flex !important;
+      align-items:center !important;
+      justify-content:center !important;
+      padding:2px 8px !important;       /* 박스 작게 */
+      border-radius:999px !important;
+      background:#f3f4f6 !important;
+      font-size:13px !important;        /* 글씨 약간 크게 */
+      line-height:1.05 !important;
+      margin:0 !important;
+    }
+
+    .temp-hot{ background:#ffe4ec !important; }
+    .temp-ice{ background:#e6f3ff !important; }
+    .temp-etc{ background:#f3f4f6 !important; }
+
+    /* 영양 성분 그리드(2열×3행) */
+    .nut-grid{ margin-top:8px; }
+    .nut{
+      display:inline-flex;
+      align-items:center;
+      padding:4px 10px;
+      border-radius:10px;
+      background:#f8fafc;
+      font-size:14px;                   /* 글씨 크게 */
+      font-weight:600;
+      line-height:1.1;
+      width:100%;
+    }
+
+    /* 가격 강조 */
+    .price{
+      font-size:22px;
+      font-weight:800;
+    }
+
+    /* 전체 높이 줄이기: 공통 여백 축소 */
+    .mt-8{ margin-top:6px; }
+    .mt-12{ margin-top:8px; }
     </style>
     """, unsafe_allow_html=True)
-
 
     # ===== 검색: 띄어쓰기/하이픈/언더스코어 무시 =====
     for col in ["Name", "Cafe", "Category"]:
@@ -227,7 +255,7 @@ def render_main():
         q = st.text_input(
             " ",
             key="search_q",
-            placeholder="🔎 음료명/카페/카테고리 검색",
+            placeholder="🔎 음료명/카페/카테고리 검색 (띄어쓰기 무시)",
             label_visibility="collapsed",
             help="예) 라떼, 투썸, 프라푸치노"
         )
@@ -392,14 +420,14 @@ def render_main():
             else:
                 st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg 저장)")
 
-            # 카페/카테고리/온도 → 동일한 '회색/색상' 배지 라인에 정렬
+            # 카페/카테고리/온도 → 동일한 배지 라인
             st.markdown('<div class="k-badges mt-12">', unsafe_allow_html=True)
             st.markdown(f"<span class='badge'>카페: {row['Cafe']}</span>", unsafe_allow_html=True)
             st.markdown(f"<span class='badge'>카테고리: {row['Category']}</span>", unsafe_allow_html=True)
             st.markdown(f"<span class='badge-pill {temp_cls}'>온도: {row['Temperature']}</span>", unsafe_allow_html=True)
             st.markdown("</div>", unsafe_allow_html=True)
 
-            # 용량/가격 → 한 줄에 나란히
+            # 용량/가격 → 한 줄에
             c_a, c_b = st.columns(2)
             with c_a:
                 st.markdown(f"<div class='badge mt-8' style='display:inline-block;'>용량 {int(row['Volume (ml)'])} ml</div>", unsafe_allow_html=True)
@@ -407,7 +435,7 @@ def render_main():
                 st.markdown(f"<div class='badge mt-8' style='display:inline-block;'>가격 {int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
 
         with col2:
-            # 영양 성분 → 3개 위, 2개 아래로 배치하여 세로 길이 단축
+            # 상세 모달의 영양 성분(기존 3+2 배치 유지)
             top1, top2, top3 = st.columns(3)
             with top1:
                 st.markdown(f"<div class='badge'>칼로리 {int(row['Calories (kcal)'])} kcal</div>", unsafe_allow_html=True)
@@ -426,12 +454,10 @@ def render_main():
         st.caption("Tip: 슬라이더를 조절해 더 깐깐하게 필터링해보세요!")
 
     def open_detail(row: pd.Series):
-        # 제목에서 '상세 정보' 제거 + 카페명 포함
         title = f"🍹 {row['Cafe']} · {row['Name']}"
         if HAS_MODAL:
             with st.modal(title, key=f"modal-{row.name}"):
                 detail_body(row)
-                # '닫기' → '확인', 클릭 시 강제 리런으로 모바일 이슈 해결
                 st.button("확인", on_click=close_and_rerun, use_container_width=True)
         elif HAS_DIALOG:
             @st.dialog(title)
@@ -464,13 +490,12 @@ def render_main():
                 with st.container(border=True):
                     top_left, top_right = st.columns([1, 0.15])
                     with top_left:
-                        st.markdown(f"### {title_text}")
+                        # 제목(크기 축소)
+                        st.markdown(f"<div class='card-title'>{title_text}</div>", unsafe_allow_html=True)
                     with top_right:
-                        st.markdown("<div class='tiny-star'>", unsafe_allow_html=True)
                         if st.button("⭐" if is_fav else "☆", key=f"favstar_{item_id}", help="즐겨찾기"):
                             toggle_fav(item_id)
                             st.rerun()
-                        st.markdown("</div>", unsafe_allow_html=True)
 
                     # 상단 메타 간격 확보
                     st.markdown(
@@ -478,13 +503,26 @@ def render_main():
                         unsafe_allow_html=True
                     )
 
-                    # 요약 배지 라인 (간격 확보)
-                    st.markdown('<div class="k-badges mt-12">', unsafe_allow_html=True)
-                    st.markdown(f"<span class='badge'>칼로리 {int(row['Calories (kcal)'])}kcal</span>", unsafe_allow_html=True)
-                    st.markdown(f"<span class='badge'>카페인 {int(row['Caffeine (mg)'])}mg</span>", unsafe_allow_html=True)
-                    st.markdown(f"<span class='badge'>당 {int(row['Sugar (g)'])}g</span>", unsafe_allow_html=True)
-                    st.markdown(f"<span class='badge'>나트륨 {int(row['Sodium (mg)'])}mg</span>", unsafe_allow_html=True)
-                    st.markdown(f"<span class='badge'>지방 {int(row['Fat (g)'])}g</span>", unsafe_allow_html=True)
+                    # --- 영양 성분 2열×3행 (글씨 키우고 ':' 표기) ---
+                    st.markdown("<div class='nut-grid'>", unsafe_allow_html=True)
+
+                    r1c1, r1c2 = st.columns(2)
+                    with r1c1:
+                        st.markdown(f"<div class='nut'>칼로리: {int(row['Calories (kcal)'])}kcal</div>", unsafe_allow_html=True)
+                    with r1c2:
+                        st.markdown(f"<div class='nut'>카페인: {int(row['Caffeine (mg)'])}mg</div>", unsafe_allow_html=True)
+
+                    r2c1, r2c2 = st.columns(2)
+                    with r2c1:
+                        st.markdown(f"<div class='nut'>당: {int(row['Sugar (g)'])}g</div>", unsafe_allow_html=True)
+                    with r2c2:
+                        st.markdown(f"<div class='nut'>나트륨: {int(row['Sodium (mg)'])}mg</div>", unsafe_allow_html=True)
+
+                    r3c1, r3c2 = st.columns(2)
+                    with r3c1:
+                        st.markdown(f"<div class='nut'>지방: {int(row['Fat (g)'])}g</div>", unsafe_allow_html=True)
+                    with r3c2:
+                        st.write("")  # 비워두기
                     st.markdown("</div>", unsafe_allow_html=True)
 
                     price_col, btn_col = st.columns([1, 0.6])
