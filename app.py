@@ -173,7 +173,7 @@ def render_cover():
 def render_main():
     df = pd.read_csv(CSV_PATH)
 
-    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기) =====
+    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기 + ⭐/푸터 고정) =====
     st.markdown("""
     <style>
     /* 카드 제목(카페명:음료명) 크기 ↓ */
@@ -231,6 +231,34 @@ def render_main():
     /* 전체 높이 줄이기: 공통 여백 축소 */
     .mt-8{ margin-top:6px; }
     .mt-12{ margin-top:8px; }
+
+    /* ===== 카드 레이아웃 고정(⭐ 우상단, 푸터 한 줄) ===== */
+    .card-box { position: relative; }
+    .card-head { position: relative; min-height: 10px; }
+    .fav-wrap {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      z-index: 2;
+    }
+    .fav-wrap .stButton > button {
+      padding: 2px 8px;
+      line-height: 1;
+      border-radius: 10px;
+    }
+    .card-foot{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-top:8px;
+    }
+    .card-foot .stButton > button { white-space: nowrap; }
+
+    @media (max-width:700px){
+      .fav-wrap { top:4px; right:4px; }
+      .card-foot{ gap:10px; }
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -488,49 +516,53 @@ def render_main():
             with cols[c]:
                 # 카드 컨테이너
                 with st.container(border=True):
-                    top_left, top_right = st.columns([1, 0.15])
-                    with top_left:
-                        # 제목(크기 축소)
-                        st.markdown(f"<div class='card-title'>{title_text}</div>", unsafe_allow_html=True)
-                    with top_right:
-                        if st.button("⭐" if is_fav else "☆", key=f"favstar_{item_id}", help="즐겨찾기"):
-                            toggle_fav(item_id)
-                            st.rerun()
+                    # 카드 래퍼
+                    st.markdown("<div class='card-box'>", unsafe_allow_html=True)
 
-                    # 상단 메타 간격 확보
+                    # ===== 상단: 제목 + 우상단 즐겨찾기(absolute) =====
+                    st.markdown("<div class='card-head'>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='card-title'>{title_text}</div>", unsafe_allow_html=True)
+                    st.markdown("<div class='fav-wrap'>", unsafe_allow_html=True)
+                    if st.button("⭐" if is_fav else "☆", key=f"favstar_{item_id}", help="즐겨찾기"):
+                        toggle_fav(item_id)
+                        st.rerun()
+                    st.markdown("</div>", unsafe_allow_html=True)  # .fav-wrap
+                    st.markdown("</div>", unsafe_allow_html=True)  # .card-head
+
+                    # 상단 메타
                     st.markdown(
                         f"<div class='meta mt-8'>카테고리: {row['Category']} &nbsp;·&nbsp; 용량: {int(row['Volume (ml)'])} ml</div>",
                         unsafe_allow_html=True
                     )
 
-                    # --- 영양 성분 2열×3행 (글씨 키우고 ':' 표기) ---
+                    # --- 영양 성분 2열×3행 ---
                     st.markdown("<div class='nut-grid'>", unsafe_allow_html=True)
-
                     r1c1, r1c2 = st.columns(2)
                     with r1c1:
                         st.markdown(f"<div class='nut'>칼로리: {int(row['Calories (kcal)'])}kcal</div>", unsafe_allow_html=True)
                     with r1c2:
                         st.markdown(f"<div class='nut'>카페인: {int(row['Caffeine (mg)'])}mg</div>", unsafe_allow_html=True)
-
                     r2c1, r2c2 = st.columns(2)
                     with r2c1:
                         st.markdown(f"<div class='nut'>당: {int(row['Sugar (g)'])}g</div>", unsafe_allow_html=True)
                     with r2c2:
                         st.markdown(f"<div class='nut'>나트륨: {int(row['Sodium (mg)'])}mg</div>", unsafe_allow_html=True)
-
                     r3c1, r3c2 = st.columns(2)
                     with r3c1:
                         st.markdown(f"<div class='nut'>지방: {int(row['Fat (g)'])}g</div>", unsafe_allow_html=True)
                     with r3c2:
-                        st.write("")  # 비워두기
+                        st.write("")
                     st.markdown("</div>", unsafe_allow_html=True)
 
-                    price_col, btn_col = st.columns([1, 0.6])
-                    with price_col:
-                        st.markdown(f"<div class='price mt-8'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
-                    with btn_col:
-                        if st.button("자세히 보기", key=f"detail_{item_id}"):
-                            st.session_state.detail_row = row
+                    # ===== 하단: 가격 + 자세히 보기(한 줄 고정) =====
+                    st.markdown("<div class='card-foot'>", unsafe_allow_html=True)
+                    st.markdown(f"<div class='price'>{int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
+                    if st.button("자세히 보기", key=f"detail_{item_id}"):
+                        st.session_state.detail_row = row
+                    st.markdown("</div>", unsafe_allow_html=True)  # .card-foot
+
+                    # 카드 래퍼 종료
+                    st.markdown("</div>", unsafe_allow_html=True)  # .card-box
 
     # 페이지 입력
     right_spacer, right_ctrl = st.columns([5, 1])
