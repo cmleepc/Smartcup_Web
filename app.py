@@ -173,7 +173,7 @@ def render_cover():
 def render_main():
     df = pd.read_csv(CSV_PATH)
 
-    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기 + 모달 커스텀) =====
+    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기 + 모달 커스텀 + 타이틀 강조) =====
     st.markdown("""
     <style>
     /* 카드 제목(카페명:음료명) 크기 ↓ */
@@ -188,6 +188,23 @@ def render_main():
       font-size:14px;
       color:#4b5563;
       margin-top:2px;
+    }
+
+    /* ===== 메인 타이틀 크기 강조 ===== */
+    .title-row{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin-bottom:12px;
+    }
+    .title-emoji{
+      font-size:48px;   /* 아이콘 크기 */
+      line-height:1;
+    }
+    .title-main{
+      font-size:36px;   /* 텍스트 크기 */
+      font-weight:800;
+      letter-spacing:0.5px;
     }
 
     .k-badges{ gap:4px !important; margin:4px 0 0 0 !important; }
@@ -216,30 +233,25 @@ def render_main():
     .mt-12{ margin-top:8px; }
 
     /* ===== 모달용 커스텀 ===== */
-    /* 폭 제한(너무 넓어 보이지 않게) */
     .stModal > div > div{
       max-width: 920px !important;
     }
 
-    /* 이미지 오른쪽 메타 블록 여백 */
     .detail-meta-wrap{ margin-left:48px; margin-top:8px; }
-
     .detail-meta-line{ margin:12px 0; font-size:16px; line-height:1.25; }
     .detail-meta-line .meta-label{ font-weight:700; }
     .detail-meta-line .meta-value{ font-weight:400; }
 
-    /* 성분칩(배지) – 내용만 감싸는 칩 */
     .pill{
       display:inline-flex; align-items:center; gap:6px;
       padding:6px 12px; border-radius:999px;
       background:#eef2f7; font-size:15px; line-height:1.1; white-space:nowrap;
       margin:6px 0; 
     }
-    .pill .k{ font-weight:700; }     /* 레이블 */
-    .pill .v{ font-weight:400; }     /* 값 */
-    .pill .u{ font-weight:400; color:#6b7280; } /* 단위는 연하게 */
+    .pill .k{ font-weight:700; }
+    .pill .v{ font-weight:400; }
+    .pill .u{ font-weight:400; color:#6b7280; }
 
-    /* 2열×3행 그리드 */
     .nut-grid{
       display:grid;
       grid-template-columns: 1fr 1fr;
@@ -249,7 +261,7 @@ def render_main():
 
     @media (max-width: 720px){
       .detail-meta-wrap{ margin-left:0; margin-top:12px; }
-      .nut-grid{ grid-template-columns: 1fr; } /* 1열 6행 */
+      .nut-grid{ grid-template-columns: 1fr; }
     }
     </style>
     """, unsafe_allow_html=True)
