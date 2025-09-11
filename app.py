@@ -166,7 +166,7 @@ def render_cover():
 
     st.markdown("---")
     # 데스크탑에선 살짝 오른쪽(컬럼 비율), 모바일에선 중앙(위 CSS)
-    left_sp, center_col, right_sp = st.columns([4, 1, 2.5])
+    left_sp, center_col, right_sp = st.columns([6, 1, 2.5])
     with center_col:
         st.markdown("<div class='cover-cta'>", unsafe_allow_html=True)
         if st.button("🚀 시작하기", key="start_btn"):
