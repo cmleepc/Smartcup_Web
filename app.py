@@ -233,6 +233,7 @@ def render_main():
       display:inline-flex; align-items:center; gap:6px;
       padding:6px 12px; border-radius:999px;
       background:#eef2f7; font-size:15px; line-height:1.1; white-space:nowrap;
+      margin:6px 0; 
     }
     .pill .k{ font-weight:700; }     /* 레이블 */
     .pill .v{ font-weight:600; }     /* 값 */
