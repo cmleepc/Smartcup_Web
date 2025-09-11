@@ -333,18 +333,18 @@ def render_main():
         "칼로리 낮은 순",
         "가격 낮은 순",
         "당류 낮은 순",
-        "당류 높은 순",
+        "지방 낮은 순",
         "카페인 낮은 순",
-        "카페인 높은 순",
+        "나트륨 낮은 순",
     ]
     sort_key = st.selectbox("정렬 기준", sort_options, key="sort_key")
     sort_map = {
         "칼로리 낮은 순": ("Calories (kcal)", True),
         "가격 낮은 순": ("Price (KRW)", True),
         "당류 낮은 순": ("Sugar (g)", True),
-        "당류 높은 순": ("Sugar (g)", False),
+        "지방 낮은 순": ("Fat (g)", True),
         "카페인 낮은 순": ("Caffeine (mg)", True),
-        "카페인 높은 순": ("Caffeine (mg)", False),
+        "나트륨 낮은 순": ("Sodium (mg)", True),
     }
     sort_col, asc = sort_map[sort_key]
     filtered = filtered.sort_values(sort_col, ascending=asc)
