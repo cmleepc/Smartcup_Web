@@ -178,8 +178,8 @@ def render_main():
     <style>
     /* 카드 제목(카페명:음료명) 크기 ↓ */
     .card-title{
-      font-size:24px;
-      font-weight:800;
+      font-size:20px;
+      font-weight:700;
       line-height:1.2;
       margin:0 0 6px 0;
     }
@@ -224,8 +224,8 @@ def render_main():
 
     /* 가격 강조 */
     .price{
-      font-size:22px;
-      font-weight:800;
+      font-size:20px;
+      font-weight:700;
     }
 
     /* 전체 높이 줄이기: 공통 여백 축소 */
@@ -255,7 +255,7 @@ def render_main():
         q = st.text_input(
             " ",
             key="search_q",
-            placeholder="🔎 음료명/카페/카테고리 검색 (띄어쓰기 무시)",
+            placeholder="🔎 음료명/카페/카테고리 검색",
             label_visibility="collapsed",
             help="예) 라떼, 투썸, 프라푸치노"
         )
