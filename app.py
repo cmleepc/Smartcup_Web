@@ -209,7 +209,7 @@ def render_main():
     .temp-etc{ background:#f3f4f6 !important; }
 
     /* 가격 강조(카드) */
-    .price{ font-size:20px; font-weight:700; }
+    .price{ font-size:20px; font-weight:600; }
 
     /* 공통 마진 축소 */
     .mt-8{ margin-top:6px; }
