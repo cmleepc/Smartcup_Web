@@ -133,15 +133,10 @@ def render_cover():
         .cover-title { font-size:40px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px; }
         .cover-sub   { font-size:18px; color:#374151; margin-bottom:12px; }
         .cover-desc  { font-size:15px; color:#4b5563; line-height:1.5; margin-bottom:10px; }
-
-        /* ✅ 모바일에서 시작하기 버튼 가운데 정렬 */
-        .start-btn-wrap { display:flex; justify-content:flex-start; }
-        @media (max-width: 700px) {
-          .cover-title { font-size:32px; }
-          .cover-sub   { font-size:16px; }
-          .cover-desc  { font-size:14px; }
-          .start-btn-wrap { justify-content:center; }            /* 컨테이너 중앙 정렬 */
-          .start-btn-wrap .stButton > button { margin:0 auto; }  /* 버튼 자체도 중앙 */
+        @media (max-width: 600px) {
+            .cover-title { font-size:32px; }
+            .cover-sub   { font-size:16px; }
+            .cover-desc  { font-size:14px; }
         }
         </style>
         """,
@@ -166,12 +161,11 @@ def render_cover():
     )
 
     st.markdown("---")
-
-    # ⬇️ 컬럼 사용하지 않고 래퍼로 감싸서 정렬 제어
-    st.markdown("<div class='start-btn-wrap'>", unsafe_allow_html=True)
-    if st.button("🚀 시작하기", key="start_btn"):
-        st.session_state.page = "main"
-    st.markdown("</div>", unsafe_allow_html=True)
+    # 버튼을 살짝 오른쪽으로
+    left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
+    with center_col:
+        if st.button("🚀 시작하기", key="start_btn"):
+            st.session_state.page = "main"
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
@@ -553,5 +547,6 @@ if st.session_state.page == "cover":
     render_cover()
 else:
     render_main()
+
 
 
