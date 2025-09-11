@@ -134,13 +134,14 @@ def render_cover():
         .cover-sub   { font-size:18px; color:#374151; margin-bottom:12px; }
         .cover-desc  { font-size:15px; color:#4b5563; line-height:1.5; margin-bottom:10px; }
 
-        /* ⬇️ 버튼 래퍼: 모바일에서만 중앙 정렬 */
-        .cover-cta { display:flex; justify-content:flex-start; }
-        @media (max-width: 600px) {
-            .cover-title { font-size:32px; }
-            .cover-sub   { font-size:16px; }
-            .cover-desc  { font-size:14px; }
-            .cover-cta   { justify-content:center; }  /* 모바일 중앙 */
+        /* ✅ 모바일에서 시작하기 버튼 가운데 정렬 */
+        .start-btn-wrap { display:flex; justify-content:flex-start; }
+        @media (max-width: 700px) {
+          .cover-title { font-size:32px; }
+          .cover-sub   { font-size:16px; }
+          .cover-desc  { font-size:14px; }
+          .start-btn-wrap { justify-content:center; }            /* 컨테이너 중앙 정렬 */
+          .start-btn-wrap .stButton > button { margin:0 auto; }  /* 버튼 자체도 중앙 */
         }
         </style>
         """,
@@ -165,12 +166,12 @@ def render_cover():
     )
 
     st.markdown("---")
-    # 👉 버튼을 정확히 가운데 1/3 영역에 배치 (모바일에서 중앙)
-    left, mid, right = st.columns([1, 1, 1])
-    with mid:
-        # 필요하면 버튼 너비 꽉 채우기: use_container_width=True
-        if st.button("🚀 시작하기", key="start_btn", use_container_width=False):
-            st.session_state.page = "main"
+
+    # ⬇️ 컬럼 사용하지 않고 래퍼로 감싸서 정렬 제어
+    st.markdown("<div class='start-btn-wrap'>", unsafe_allow_html=True)
+    if st.button("🚀 시작하기", key="start_btn"):
+        st.session_state.page = "main"
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
