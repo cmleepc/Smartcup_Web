@@ -166,7 +166,7 @@ def render_cover():
 
     st.markdown("---")
     # 데스크탑에선 살짝 오른쪽(컬럼 비율), 모바일에선 중앙(위 CSS)
-    left_sp, center_col, right_sp = st.columns([6, 1, 2.5])
+    left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
     with center_col:
         st.markdown("<div class='cover-cta'>", unsafe_allow_html=True)
         if st.button("🚀 시작하기", key="start_btn"):
@@ -179,80 +179,62 @@ def render_cover():
 def render_main():
     df = pd.read_csv(CSV_PATH)
 
-    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기/모바일 튜닝) =====
+    # ===== 전역 스타일 보강 (모바일 UI 포함) =====
     st.markdown("""
     <style>
-    /* 카드 제목(카페명:음료명) */
+    /* 제목(카페명:음료명) */
     .card-title{
       font-size:20px;
       font-weight:700;
       line-height:1.3;
       margin:0 0 6px 0;
+      padding-right:44px; /* ✅ 우상단 별과 겹치지 않게 여백 */
     }
     @media (max-width:600px){
-      .card-title{ font-size:18px; line-height:1.25; }
+      .card-title{ font-size:18px; line-height:1.25; padding-right:40px; }
     }
 
-    .meta{
-      font-size:14px;
-      color:#4b5563;
-      margin-top:2px;
-    }
-
+    .meta{ font-size:14px; color:#4b5563; margin-top:2px; }
     .k-badges{ gap:4px !important; margin:4px 0 0 0 !important; }
 
     .badge, .badge-pill, div.badge, div.badge-pill{
-      display:inline-flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-      padding:2px 8px !important;       /* 박스 작게 */
-      border-radius:999px !important;
-      background:#f3f4f6 !important;
-      font-size:13px !important;        /* 글씨 약간 크게 */
-      line-height:1.05 !important;
-      margin:0 !important;
+      display:inline-flex !important; align-items:center !important; justify-content:center !important;
+      padding:2px 8px !important; border-radius:999px !important; background:#f3f4f6 !important;
+      font-size:13px !important; line-height:1.05 !important; margin:0 !important;
     }
 
     .temp-hot{ background:#ffe4ec !important; }
     .temp-ice{ background:#e6f3ff !important; }
     .temp-etc{ background:#f3f4f6 !important; }
 
-    /* ✅ 카드 내부 상대/절대 배치용 */
+    /* ✅ 카드 내부 절대 배치: 첫번째 버튼(⭐)을 우상단 고정 */
     .card-rel{ position:relative; }
-    .star-abs{ position:absolute; top:10px; right:10px; z-index:2; }
+    .card-rel div.stButton:first-of-type{
+      position:absolute; top:8px; right:8px; z-index:3;
+    }
+    .card-rel div.stButton:first-of-type button{
+      padding:2px 10px; font-size:16px;
+    }
 
-    /* 영양 성분 그리드(2열×3행) */
+    /* 영양 성분 2열×3행 */
     .nut-grid{ margin-top:8px; }
     .nut{
-      display:inline-flex;
-      align-items:center;
-      padding:4px 10px;
-      border-radius:10px;
-      background:#f8fafc;
-      font-size:14px;                   /* 글씨 크게 */
-      font-weight:600;
-      line-height:1.1;
-      width:100%;
+      display:inline-flex; align-items:center; padding:4px 10px; border-radius:10px;
+      background:#f8fafc; font-size:14px; font-weight:600; line-height:1.1; width:100%;
     }
     @media (max-width:600px){
       .nut{ font-size:13px; padding:4px 8px; }
     }
 
-    /* 가격 강조 */
-    .price{
-      font-size:20px;
-      font-weight:700;
-    }
-    @media (max-width:600px){
-      .price{ font-size:20px; }  /* 가격 유지 */
-    }
+    /* 가격 */
+    .price{ font-size:20px; font-weight:700; }
 
-    /* ✅ 모바일에서 버튼이 옆에 들어가도록 크기 축소 */
+    /* ✅ 모바일에서 '자세히 보기'가 옆에 들어가도록 버튼 축소 */
     @media (max-width:600px){
       .stButton>button{ padding:6px 10px; font-size:14px; }
     }
 
-    /* 전체 높이 줄이기: 공통 여백 축소 */
+    /* 여백 축소 */
     .mt-8{ margin-top:6px; }
     .mt-12{ margin-top:8px; }
     </style>
@@ -512,18 +494,16 @@ def render_main():
             with cols[c]:
                 # 카드 컨테이너
                 with st.container(border=True):
-                    # ✅ 카드 내부 절대 배치 래퍼(별 고정용)
+                    # ✅ 카드 내부 절대 배치 래퍼(첫 버튼=별 고정)
                     st.markdown("<div class='card-rel'>", unsafe_allow_html=True)
 
-                    # 제목(크기/굵기 조정)
+                    # 제목
                     st.markdown(f"<div class='card-title'>{title_text}</div>", unsafe_allow_html=True)
 
-                    # ✅ 즐겨찾기 별: 카드 오른쪽 상단 고정
-                    st.markdown("<div class='star-abs'>", unsafe_allow_html=True)
+                    # ⭐ 즐겨찾기 버튼(첫번째 버튼 → CSS로 우상단 고정)
                     if st.button("⭐" if is_fav else "☆", key=f"favstar_{item_id}", help="즐겨찾기"):
                         toggle_fav(item_id)
                         st.rerun()
-                    st.markdown("</div>", unsafe_allow_html=True)
 
                     # 상단 메타
                     st.markdown(
@@ -531,9 +511,8 @@ def render_main():
                         unsafe_allow_html=True
                     )
 
-                    # --- 영양 성분 2열×3행 (':' 표기) ---
+                    # --- 영양 성분 2열×3행 ---
                     st.markdown("<div class='nut-grid'>", unsafe_allow_html=True)
-
                     r1c1, r1c2 = st.columns(2)
                     with r1c1:
                         st.markdown(f"<div class='nut'>칼로리: {int(row['Calories (kcal)'])}kcal</div>", unsafe_allow_html=True)
@@ -550,7 +529,7 @@ def render_main():
                     with r3c1:
                         st.markdown(f"<div class='nut'>지방: {int(row['Fat (g)'])}g</div>", unsafe_allow_html=True)
                     with r3c2:
-                        st.write("")  # 비워두기
+                        st.write("")
                     st.markdown("</div>", unsafe_allow_html=True)
 
                     # 가격(왼쪽) – 버튼(오른쪽)
@@ -561,7 +540,7 @@ def render_main():
                         if st.button("자세히 보기", key=f"detail_{item_id}"):
                             st.session_state.detail_row = row
 
-                    # ✅ 래퍼 닫기
+                    # 래퍼 닫기
                     st.markdown("</div>", unsafe_allow_html=True)
 
     # 페이지 입력
@@ -579,3 +558,4 @@ if st.session_state.page == "cover":
     render_cover()
 else:
     render_main()
+
