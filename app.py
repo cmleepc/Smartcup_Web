@@ -133,10 +133,14 @@ def render_cover():
         .cover-title { font-size:40px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px; }
         .cover-sub   { font-size:18px; color:#374151; margin-bottom:12px; }
         .cover-desc  { font-size:15px; color:#4b5563; line-height:1.5; margin-bottom:10px; }
-        @media (max-width: 600px) {
-            .cover-title { font-size:32px; }
-            .cover-sub   { font-size:16px; }
-            .cover-desc  { font-size:14px; }
+
+        /* ✅ 표지에서만: 모바일에서 버튼 중앙 정렬 */
+        @media (max-width: 700px) {
+          .cover-title { font-size:32px; }
+          .cover-sub   { font-size:16px; }
+          .cover-desc  { font-size:14px; }
+          div.stButton { text-align: center !important; }     /* 버튼 래퍼 중앙 */
+          div.stButton > button { margin: 0 auto !important; }/* 버튼 자체 중앙 */
         }
         </style>
         """,
@@ -161,11 +165,10 @@ def render_cover():
     )
 
     st.markdown("---")
-    # 버튼을 살짝 오른쪽으로
-    left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
-    with center_col:
-        if st.button("🚀 시작하기", key="start_btn"):
-            st.session_state.page = "main"
+
+    # ⬇️ 컬럼 없이 바로 버튼 렌더 (모바일에선 위 CSS가 중앙 정렬 보장)
+    if st.button("🚀 시작하기", key="start_btn"):
+        st.session_state.page = "main"
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
