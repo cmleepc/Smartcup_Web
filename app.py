@@ -41,12 +41,7 @@ def _norm_key(s: str) -> str:
 
 # --- 교체된 이미지 탐색 함수 ---
 def find_image_path(cafe: str, name: str, temp: str = ""):
-    """
-    images/ 폴더에서 실제 파일들을 순회하며 느슨하게 매칭:
-    - 후보: 1) Cafe_Name, 2) Cafe_Temp Name
-    - 비교 시 공백/밑줄/하이픈 제거, 소문자화, 유니코드 정규화
-    - 확장자 대/소문자 허용 (.jpg/.jpeg/.png)
-    """
+    """images 폴더에서 느슨 매칭"""
     cafe_raw = str(cafe or "").strip()
     name_raw = str(name or "").strip()
     temp_raw = str(temp or "").strip()
@@ -56,35 +51,29 @@ def find_image_path(cafe: str, name: str, temp: str = ""):
         candidate_stems.append(f"{cafe_raw}_{temp_raw} {name_raw}")
 
     cand_keys = [_norm_key(stem) for stem in candidate_stems]
-
     allow_ext = {".jpg", ".jpeg", ".png", ".JPG", ".JPEG", ".PNG"}
 
     if not IMG_DIR.exists():
         return None
 
-    # 1차: 원문 스템 기반
     for p in IMG_DIR.iterdir():
         if not p.is_file() or p.suffix not in allow_ext:
             continue
         if _norm_key(p.stem) in cand_keys:
             return p
 
-    # 2차: safe_filename 버전
     cafe_s = safe_filename(cafe_raw)
     name_s = safe_filename(name_raw)
     temp_s = safe_filename(temp_raw) if temp_raw else ""
-
     candidate_stems2 = [f"{cafe_s}_{name_s}"]
     if temp_s:
         candidate_stems2.append(f"{cafe_s}_{temp_s}_{name_s}")
-
     cand_keys2 = [_norm_key(stem) for stem in candidate_stems2]
     for p in IMG_DIR.iterdir():
         if not p.is_file() or p.suffix not in allow_ext:
             continue
         if _norm_key(p.stem) in cand_keys2:
             return p
-
     return None
 
 
@@ -114,7 +103,6 @@ def toggle_fav(item_id: str):
     st.session_state.favorites = fav
 
 def close_and_rerun():
-    """모바일에서 모달이 안닫히는 케이스 방지용"""
     st.session_state.detail_row = None
     try:
         st.rerun()
@@ -161,7 +149,6 @@ def render_cover():
     )
 
     st.markdown("---")
-    # 버튼을 살짝 오른쪽으로
     left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
     with center_col:
         if st.button("🚀 시작하기", key="start_btn"):
@@ -173,68 +160,42 @@ def render_cover():
 def render_main():
     df = pd.read_csv(CSV_PATH)
 
-    # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기) =====
+    # ===== 전역 스타일(카드/배지) + 상세 모달용 스타일 =====
     st.markdown("""
     <style>
-    /* 카드 제목(카페명:음료명) 크기 ↓ */
-    .card-title{
-      font-size:20px;
-      font-weight:700;
-      line-height:1.2;
-      margin:0 0 6px 0;
-    }
-
-    .meta{
-      font-size:14px;
-      color:#4b5563;
-      margin-top:2px;
-    }
-
+    .card-title{ font-size:20px; font-weight:700; line-height:1.2; margin:0 0 6px 0; }
+    .meta{ font-size:14px; color:#4b5563; margin-top:2px; }
     .k-badges{ gap:4px !important; margin:4px 0 0 0 !important; }
-
     .badge, .badge-pill, div.badge, div.badge-pill{
-      display:inline-flex !important;
-      align-items:center !important;
-      justify-content:center !important;
-      padding:2px 8px !important;       /* 박스 작게 */
-      border-radius:999px !important;
-      background:#f3f4f6 !important;
-      font-size:13px !important;        /* 글씨 약간 크게 */
-      line-height:1.05 !important;
-      margin:0 !important;
+      display:inline-flex !important; align-items:center !important; justify-content:center !important;
+      padding:2px 8px !important; border-radius:999px !important; background:#f3f4f6 !important;
+      font-size:13px !important; line-height:1.05 !important; margin:0 !important;
     }
-
-    .temp-hot{ background:#ffe4ec !important; }
-    .temp-ice{ background:#e6f3ff !important; }
-    .temp-etc{ background:#f3f4f6 !important; }
-
-    /* 영양 성분 그리드(2열×3행) */
+    .temp-hot{ background:#ffe4ec !important; } .temp-ice{ background:#e6f3ff !important; } .temp-etc{ background:#f3f4f6 !important; }
     .nut-grid{ margin-top:8px; }
-    .nut{
-      display:inline-flex;
-      align-items:center;
-      padding:4px 10px;
-      border-radius:10px;
-      background:#f8fafc;
-      font-size:14px;                   /* 글씨 크게 */
-      font-weight:600;
-      line-height:1.1;
-      width:100%;
-    }
+    .nut{ display:inline-flex; align-items:center; padding:4px 10px; border-radius:10px; background:#f8fafc;
+          font-size:14px; font-weight:600; line-height:1.1; width:100%; }
+    .price{ font-size:20px; font-weight:700; }
+    .mt-8{ margin-top:6px; } .mt-12{ margin-top:8px; }
 
-    /* 가격 강조 */
-    .price{
-      font-size:20px;
-      font-weight:700;
+    /* ===== 상세 모달 전용 ===== */
+    .detail-meta-line{
+      font-size:16px; font-weight:700; margin:8px 0 2px 0;
     }
-
-    /* 전체 높이 줄이기: 공통 여백 축소 */
-    .mt-8{ margin-top:6px; }
-    .mt-12{ margin-top:8px; }
+    .detail-price{ font-size:18px; font-weight:800; margin-top:10px; }
+    .nut-big{
+      background:#f1f5f9; border-radius:12px; padding:12px 14px; font-size:16px; font-weight:800;
+      display:flex; align-items:center; justify-content:flex-start; width:100%;
+    }
+    @media (max-width:700px){
+      .detail-meta-line{ font-size:15px; }
+      .detail-price{ font-size:17px; }
+      .nut-big{ font-size:15px; }
+    }
     </style>
     """, unsafe_allow_html=True)
 
-    # ===== 검색: 띄어쓰기/하이픈/언더스코어 무시 =====
+    # ===== 검색 =====
     for col in ["Name", "Cafe", "Category"]:
         df[f"{col}__norm"] = df[col].astype(str).map(_norm_key)
 
@@ -252,13 +213,10 @@ def render_main():
             unsafe_allow_html=True
         )
     with right:
-        q = st.text_input(
-            " ",
-            key="search_q",
+        q = st.text_input(" ", key="search_q",
             placeholder="🔎 음료명/카페/카테고리 검색",
             label_visibility="collapsed",
-            help="예) 라떼, 투썸, 프라푸치노"
-        )
+            help="예) 라떼, 투썸, 프라푸치노")
         if st.session_state._prev_q != q:
             st.session_state.page_num = 1
             st.session_state._prev_q = q
@@ -266,7 +224,7 @@ def render_main():
     st.caption("왼쪽 사이드바의 필터를 눌러 자유롭게 필터링해보세요.")
     st.markdown('<div class="spacer-vertical"></div>', unsafe_allow_html=True)
 
-    # ===== 사이드바: 프리셋/필터 =====
+    # ===== 사이드바 =====
     st.sidebar.header("🚀 추천/가이드 MODE")
     c1, c2, c3 = st.sidebar.columns(3)
     with c1:
@@ -323,7 +281,6 @@ def render_main():
     # ===== 필터링 =====
     filtered = df.copy()
 
-    # 🔽 검색어 공백/하이픈/언더스코어 무시 검색
     if q:
         q_norm = _norm_key(q)
         mask_q = (
@@ -358,12 +315,7 @@ def render_main():
     st.markdown('<h3 class="section-title">결과</h3>', unsafe_allow_html=True)
 
     sort_options = [
-        "칼로리 낮은 순",
-        "가격 낮은 순",
-        "당류 낮은 순",
-        "지방 낮은 순",
-        "카페인 낮은 순",
-        "나트륨 낮은 순",
+        "칼로리 낮은 순","가격 낮은 순","당류 낮은 순","지방 낮은 순","카페인 낮은 순","나트륨 낮은 순",
     ]
     sort_key = st.selectbox("정렬 기준", sort_options, key="sort_key")
     sort_map = {
@@ -401,54 +353,41 @@ def render_main():
         item_id = make_item_id(row)
         mark_as_viewed(item_id)
 
-        # 온도 배지 클래스
-        temp_val = str(row.get("Temperature", "")).strip().upper()
-        temp_cls = "temp-etc"
-        if temp_val == "HOT":
-            temp_cls = "temp-hot"
-        elif temp_val == "ICE":
-            temp_cls = "temp-ice"
-
-        # --- 온도까지 포함해 이미지 찾기 ---
-        img_path = find_image_path(row["Cafe"], row["Name"], row.get("Temperature", ""))
-
-        # 상단: 이미지 / 주요 메타
-        col1, col2 = st.columns([1,1])
-        with col1:
+        # --- 이미지 + 오른쪽 메타(큰 글씨) ---
+        col_img, col_meta = st.columns([1, 1])
+        with col_img:
+            img_path = find_image_path(row["Cafe"], row["Name"], row.get("Temperature", ""))
             if img_path:
                 st.image(str(img_path), caption=row["Name"], use_container_width=True)
             else:
                 st.info("이미지가 없습니다. (images/ 폴더에 {카페명}_{음료명}.jpg 또는 {카페명}_{온도} {음료명}.jpg 저장)")
 
-            # 카페/카테고리/온도 → 동일한 배지 라인
-            st.markdown('<div class="k-badges mt-12">', unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>카페: {row['Cafe']}</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge'>카테고리: {row['Category']}</span>", unsafe_allow_html=True)
-            st.markdown(f"<span class='badge-pill {temp_cls}'>온도: {row['Temperature']}</span>", unsafe_allow_html=True)
-            st.markdown("</div>", unsafe_allow_html=True)
+        with col_meta:
+            temp_val = str(row.get("Temperature", "")).strip().upper()
+            st.markdown(f"<div class='detail-meta-line'>카페: {row['Cafe']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='detail-meta-line'>카테고리: {row['Category']}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='detail-meta-line'>온도: {temp_val}</div>", unsafe_allow_html=True)
+            st.markdown(f"<div class='detail-meta-line detail-price'>가격: {int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
 
-            # 용량/가격 → 한 줄에
-            c_a, c_b = st.columns(2)
-            with c_a:
-                st.markdown(f"<div class='badge mt-8' style='display:inline-block;'>용량 {int(row['Volume (ml)'])} ml</div>", unsafe_allow_html=True)
-            with c_b:
-                st.markdown(f"<div class='badge mt-8' style='display:inline-block;'>가격 {int(row['Price (KRW)']):,} 원</div>", unsafe_allow_html=True)
+        # --- 사진 아래 2열×3행 배지(조금 더 크게) ---
+        st.markdown("")  # 약간의 간격
+        g1c1, g1c2 = st.columns(2)
+        with g1c1:
+            st.markdown(f"<div class='nut-big'>칼로리: {int(row['Calories (kcal)'])} kcal</div>", unsafe_allow_html=True)
+        with g1c2:
+            st.markdown(f"<div class='nut-big'>당: {int(row['Sugar (g)'])} g</div>", unsafe_allow_html=True)
 
-        with col2:
-            # 상세 모달의 영양 성분(기존 3+2 배치 유지)
-            top1, top2, top3 = st.columns(3)
-            with top1:
-                st.markdown(f"<div class='badge'>칼로리 {int(row['Calories (kcal)'])} kcal</div>", unsafe_allow_html=True)
-            with top2:
-                st.markdown(f"<div class='badge'>당 {int(row['Sugar (g)'])} g</div>", unsafe_allow_html=True)
-            with top3:
-                st.markdown(f"<div class='badge'>카페인 {int(row['Caffeine (mg)'])} mg</div>", unsafe_allow_html=True)
+        g2c1, g2c2 = st.columns(2)
+        with g2c1:
+            st.markdown(f"<div class='nut-big'>카페인: {int(row['Caffeine (mg)'])} mg</div>", unsafe_allow_html=True)
+        with g2c2:
+            st.markdown(f"<div class='nut-big'>나트륨: {int(row['Sodium (mg)'])} mg</div>", unsafe_allow_html=True)
 
-            bot1, bot2, _ = st.columns([1,1,1])
-            with bot1:
-                st.markdown(f"<div class='badge mt-8'>나트륨 {int(row['Sodium (mg)'])} mg</div>", unsafe_allow_html=True)
-            with bot2:
-                st.markdown(f"<div class='badge mt-8'>지방 {int(row['Fat (g)'])} g</div>", unsafe_allow_html=True)
+        g3c1, g3c2 = st.columns(2)
+        with g3c1:
+            st.markdown(f"<div class='nut-big'>지방: {int(row['Fat (g)'])} g</div>", unsafe_allow_html=True)
+        with g3c2:
+            st.markdown(f"<div class='nut-big'>용량: {int(row['Volume (ml)'])} ml</div>", unsafe_allow_html=True)
 
         st.divider()
         st.caption("Tip: 슬라이더를 조절해 더 깐깐하게 필터링해보세요!")
@@ -486,43 +425,36 @@ def render_main():
             title_text = format_title(str(row['Cafe']), str(row['Temperature']), str(row['Name']))
 
             with cols[c]:
-                # 카드 컨테이너
                 with st.container(border=True):
                     top_left, top_right = st.columns([1, 0.15])
                     with top_left:
-                        # 제목(크기 축소)
                         st.markdown(f"<div class='card-title'>{title_text}</div>", unsafe_allow_html=True)
                     with top_right:
                         if st.button("⭐" if is_fav else "☆", key=f"favstar_{item_id}", help="즐겨찾기"):
                             toggle_fav(item_id)
                             st.rerun()
 
-                    # 상단 메타 간격 확보
                     st.markdown(
                         f"<div class='meta mt-8'>카테고리: {row['Category']} &nbsp;·&nbsp; 용량: {int(row['Volume (ml)'])} ml</div>",
                         unsafe_allow_html=True
                     )
 
-                    # --- 영양 성분 2열×3행 (글씨 키우고 ':' 표기) ---
                     st.markdown("<div class='nut-grid'>", unsafe_allow_html=True)
-
                     r1c1, r1c2 = st.columns(2)
                     with r1c1:
                         st.markdown(f"<div class='nut'>칼로리: {int(row['Calories (kcal)'])}kcal</div>", unsafe_allow_html=True)
                     with r1c2:
                         st.markdown(f"<div class='nut'>카페인: {int(row['Caffeine (mg)'])}mg</div>", unsafe_allow_html=True)
-
                     r2c1, r2c2 = st.columns(2)
                     with r2c1:
                         st.markdown(f"<div class='nut'>당: {int(row['Sugar (g)'])}g</div>", unsafe_allow_html=True)
                     with r2c2:
                         st.markdown(f"<div class='nut'>나트륨: {int(row['Sodium (mg)'])}mg</div>", unsafe_allow_html=True)
-
                     r3c1, r3c2 = st.columns(2)
                     with r3c1:
                         st.markdown(f"<div class='nut'>지방: {int(row['Fat (g)'])}g</div>", unsafe_allow_html=True)
                     with r3c2:
-                        st.write("")  # 비워두기
+                        st.write("")
                     st.markdown("</div>", unsafe_allow_html=True)
 
                     price_col, btn_col = st.columns([1, 0.6])
@@ -532,7 +464,6 @@ def render_main():
                         if st.button("자세히 보기", key=f"detail_{item_id}"):
                             st.session_state.detail_row = row
 
-    # 페이지 입력
     right_spacer, right_ctrl = st.columns([5, 1])
     with right_ctrl:
         st.number_input("페이지", min_value=1, max_value=pages, value=st.session_state.page_num, step=1, key="page_num")
