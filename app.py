@@ -236,7 +236,7 @@ def render_main():
       margin:6px 0; 
     }
     .pill .k{ font-weight:700; }     /* 레이블 */
-    .pill .v{ font-weight:600; }     /* 값 */
+    .pill .v{ font-weight:400; }     /* 값 */
     .pill .u{ font-weight:400; color:#6b7280; } /* 단위는 연하게 */
 
     /* 2열×3행 그리드 */
