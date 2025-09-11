@@ -133,10 +133,14 @@ def render_cover():
         .cover-title { font-size:40px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px; }
         .cover-sub   { font-size:18px; color:#374151; margin-bottom:12px; }
         .cover-desc  { font-size:15px; color:#4b5563; line-height:1.5; margin-bottom:10px; }
+
+        /* ⬇️ 버튼 래퍼: 모바일에서만 중앙 정렬 */
+        .cover-cta { display:flex; justify-content:flex-start; }
         @media (max-width: 600px) {
             .cover-title { font-size:32px; }
             .cover-sub   { font-size:16px; }
             .cover-desc  { font-size:14px; }
+            .cover-cta   { justify-content:center; }  /* 모바일 중앙 */
         }
         </style>
         """,
@@ -161,11 +165,13 @@ def render_cover():
     )
 
     st.markdown("---")
-    # 버튼을 살짝 오른쪽으로
+    # 데스크탑 배치는 신경 안 씀. 모바일에선 아래 CSS가 중앙으로 정렬해줌.
     left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
     with center_col:
+        st.markdown("<div class='cover-cta'>", unsafe_allow_html=True)
         if st.button("🚀 시작하기", key="start_btn"):
             st.session_state.page = "main"
+        st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
