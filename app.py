@@ -165,13 +165,12 @@ def render_cover():
     )
 
     st.markdown("---")
-    # 데스크탑 배치는 신경 안 씀. 모바일에선 아래 CSS가 중앙으로 정렬해줌.
-    left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
-    with center_col:
-        st.markdown("<div class='cover-cta'>", unsafe_allow_html=True)
-        if st.button("🚀 시작하기", key="start_btn"):
+    # 👉 버튼을 정확히 가운데 1/3 영역에 배치 (모바일에서 중앙)
+    left, mid, right = st.columns([1, 1, 1])
+    with mid:
+        # 필요하면 버튼 너비 꽉 채우기: use_container_width=True
+        if st.button("🚀 시작하기", key="start_btn", use_container_width=False):
             st.session_state.page = "main"
-        st.markdown("</div>", unsafe_allow_html=True)
 
 # =========================
 # 메인(필터 + 정렬 + 카드 + 상세)
