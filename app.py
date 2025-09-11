@@ -161,7 +161,7 @@ def render_cover():
     )
 
     st.markdown("---")
-    left_sp, center_col, right_sp = st.columns([3, 1, 2])
+    left_sp, center_col, right_sp = st.columns([3, 1, 2.5])
     with center_col:
         if st.button("🚀 시작하기", key="start_btn"):
             st.session_state.page = "main"
