@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import pandas as pd
 import unicodedata
@@ -8,6 +7,35 @@ from pathlib import Path
 # 기본 설정/경로
 # =========================
 st.set_page_config(page_title="스마트컵", layout="wide")
+
+# ✅ 모바일 가독성 전역 개선 (앱 전역 1회 주입)
+st.markdown("""
+<style>
+/* ----- 기본 본문 글자 크게 (전역) ----- */
+html, body, [class*="css"] {
+  font-size: 18px !important;
+  line-height: 1.45 !important;
+}
+
+/* ----- 모바일(가로 600px 이하)에서 더 크게 ----- */
+@media (max-width: 600px) {
+  html, body, [class*="css"] { font-size: 20px !important; }
+  h1, h2, h3, h4, h5, h6 { line-height: 1.25 !important; }
+
+  /* 입력/버튼/컨트롤 */
+  .stTextInput input,
+  .stSelectbox div[data-baseweb="select"] div,
+  textarea, select { font-size: 18px !important; }
+  .stButton button { font-size: 18px !important; padding: 10px 14px !important; }
+  .stCheckbox, .stRadio, .stSlider { font-size: 18px !important; }
+
+  /* 표/익스팬더/캡션 */
+  .stDataFrame div, .stDataFrame table { font-size: 16px !important; }
+  .stExpanderHeader, .streamlit-expanderHeader { font-size: 18px !important; }
+  .stCaption, .st-emotion-cache-1low4of { font-size: 16px !important; }
+}
+</style>
+""", unsafe_allow_html=True)
 
 DATA_DIR = Path(__file__).parent
 CSV_PATH = DATA_DIR / "smartcup_final_6.csv"
@@ -129,14 +157,14 @@ def render_cover():
         """
         <style>
         .cover-wrap { text-align:center; display:flex; flex-direction:column; align-items:center; }
-        .cover-emoji { font-size:64px; line-height:1; margin-bottom:16px; }
-        .cover-title { font-size:40px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px; }
-        .cover-sub   { font-size:18px; color:#374151; margin-bottom:12px; }
-        .cover-desc  { font-size:15px; color:#4b5563; line-height:1.5; margin-bottom:10px; }
+        .cover-emoji { font-size:72px; line-height:1; margin-bottom:16px; }
+        .cover-title { font-size:44px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px; }
+        .cover-sub   { font-size:20px; color:#374151; margin-bottom:12px; }
+        .cover-desc  { font-size:17px; color:#4b5563; line-height:1.6; margin-bottom:10px; }
         @media (max-width: 600px) {
-            .cover-title { font-size:32px; }
-            .cover-sub   { font-size:16px; }
-            .cover-desc  { font-size:14px; }
+            .cover-title { font-size:36px; }
+            .cover-sub   { font-size:18px; }
+            .cover-desc  { font-size:16px; }
         }
         </style>
         """,
@@ -176,16 +204,16 @@ def render_main():
     # ===== 전역 스타일 보강 (간격/배지/온도 색상/카드 크기 + 모달 커스텀 + 타이틀 강조) =====
     st.markdown("""
     <style>
-    /* 카드 제목(카페명:음료명) 크기 ↓ */
+    /* 카드 제목(카페명:음료명) 크기 ↑ */
     .card-title{
-      font-size:20px;
+      font-size:22px;
       font-weight:700;
-      line-height:1.2;
+      line-height:1.3;
       margin:0 0 6px 0;
     }
 
     .meta{
-      font-size:14px;
+      font-size:16px;
       color:#4b5563;
       margin-top:2px;
     }
@@ -198,11 +226,11 @@ def render_main():
       margin-bottom:12px;
     }
     .title-emoji{
-      font-size:48px;   /* 아이콘 크기 */
+      font-size:56px;   /* 아이콘 크기 */
       line-height:1;
     }
     .title-main{
-      font-size:36px;   /* 텍스트 크기 */
+      font-size:40px;   /* 텍스트 크기 */
       font-weight:800;
       letter-spacing:0.5px;
     }
@@ -213,10 +241,10 @@ def render_main():
       display:inline-flex !important;
       align-items:center !important;
       justify-content:center !important;
-      padding:2px 8px !important;       /* 박스 작게 */
+      padding:4px 10px !important;       /* 박스 조금 키움 */
       border-radius:999px !important;
       background:#f3f4f6 !important;
-      font-size:13px !important;        /* 글씨 약간 크게 */
+      font-size:15px !important;         /* 글씨 크게 */
       line-height:1.05 !important;
       margin:0 !important;
     }
@@ -226,7 +254,7 @@ def render_main():
     .temp-etc{ background:#f3f4f6 !important; }
 
     /* 가격 강조(카드) */
-    .price{ font-size:20px; font-weight:600; }
+    .price{ font-size:22px; font-weight:600; }
 
     /* 공통 마진 축소 */
     .mt-8{ margin-top:6px; }
@@ -244,12 +272,12 @@ def render_main():
 
     .pill{
       display:inline-flex; align-items:center; gap:6px;
-      padding:6px 12px; border-radius:999px;
-      background:#eef2f7; font-size:15px; line-height:1.1; white-space:nowrap;
+      padding:8px 12px; border-radius:999px;
+      background:#eef2f7; font-size:16px; line-height:1.15; white-space:nowrap;
       margin:6px 0; 
     }
     .pill .k{ font-weight:700; }
-    .pill .v{ font-weight:400; }
+    .pill .v{ font-weight:500; }
     .pill .u{ font-weight:400; color:#6b7280; }
 
     .nut-grid{
@@ -262,6 +290,16 @@ def render_main():
     @media (max-width: 720px){
       .detail-meta-wrap{ margin-left:0; margin-top:12px; }
       .nut-grid{ grid-template-columns: 1fr; }
+    }
+
+    /* 📱 모바일(600px 이하) 폰트/요소 크기 보정 */
+    @media (max-width: 600px){
+      .title-emoji{ font-size:52px; }
+      .title-main{  font-size:36px; }
+      .card-title{  font-size:21px; }
+      .meta{        font-size:15px; }
+      .price{       font-size:21px; }
+      .pill{        font-size:16px; padding:8px 12px; }
     }
     </style>
     """, unsafe_allow_html=True)
